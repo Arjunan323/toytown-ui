@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 const MyReviewsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { myReviews, loading } = useSelector((state) => state.review);
+  const { myReviews, loading } = useSelector((state) => state.reviews || {});
 
   useEffect(() => {
     dispatch(fetchMyReviews({ page: 0, size: 20 }));
