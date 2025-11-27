@@ -73,8 +73,6 @@ function App() {
   }, [dispatch, isAuthenticated]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
       <Router>
         <Routes>
           {/* Admin Routes - No Header/Footer */}
