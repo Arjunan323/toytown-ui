@@ -20,17 +20,6 @@ const MyReviewsPage = () => {
     dispatch(fetchMyReviews({ page: 0, size: 20 }));
   }, [dispatch]);
 
-  const handleDelete = async (reviewId) => {
-    if (window.confirm('Are you sure you want to delete this review?')) {
-      try {
-        await dispatch(deleteReview(reviewId)).unwrap();
-        dispatch(fetchMyReviews({ page: 0, size: 20 }));
-      } catch (err) {
-        console.error('Failed to delete review:', err);
-      }
-    }
-  };
-
   const handleProductClick = (productId) => {
     navigate(`/products/${productId}`);
   };
