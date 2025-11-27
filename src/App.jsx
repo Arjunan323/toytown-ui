@@ -35,41 +35,7 @@ import AdminOrderManagementPage from './pages/admin/AdminOrderManagementPage';
 import AdminBannerManagementPage from './pages/admin/AdminBannerManagementPage';
 import { AdminLayout } from './components/admin';
 
-// Theme configuration
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2', // Blue
-    },
-    secondary: {
-      main: '#dc004e', // Pink
-    },
-    background: {
-      default: '#f5f5f5',
-      paper: '#ffffff',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 500,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 500,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
-  },
-});
+// Tailwind CSS is now used for all styling - no theme configuration needed
 
 // Protected Route wrapper
 const ProtectedRoute = ({ children }) => {
