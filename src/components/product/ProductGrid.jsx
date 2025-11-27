@@ -1,19 +1,13 @@
 import PropTypes from 'prop-types';
-import {
-  Grid,
-  Box,
-  Typography,
-  Pagination,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
 import ProductCard from './ProductCard';
+import ProductGridSkeleton from '../common/ProductGridSkeleton';
+import { Package, ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
  * ProductGrid Component
  * 
- * Displays a grid of product cards with pagination support.
- * Used on category pages, search results, and featured product sections.
+ * Displays a responsive grid of product cards with pagination.
+ * Used on category pages, search results, and product listings.
  * 
  * @component
  */
@@ -24,139 +18,119 @@ const ProductGrid = ({
   page = 1,
   totalPages = 1,
   onPageChange,
-  onProductClick,
   emptyMessage = 'No products found',
   columns = { xs: 1, sm: 2, md: 3, lg: 4 },
 }) => {
-  const handlePageChange = (event, value) => {
-    if (onPageChange) {
-      onPageChange(value);
-    }
-    // Scroll to top of grid on page change
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   // Loading state
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px',
-        }}
-      >
-        <CircularProgress size={60} />
-      </Box>
-    );
+  if (loading && products.length === 0) {
+    return <ProductGridSkeleton count={8} />;
   }
 
   // Error state
   if (error) {
     return (
-      <Box sx={{ my: 4 }}>
-        <Alert severity="error">
-          {error}
-        </Alert>
-      </Box>
+      <div className="card p-12 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Package className="w-8 h-8 text-red-600" />
+        </div>
+        <h3 className="text-2xl font-display font-bold text-gray-800 mb-2">Oops!</h3>
+        <p className="text-gray-600">{error}</p>
+      </div>
     );
   }
 
   // Empty state
-  if (!products || products.length === 0) {
+  if (!loading && products.length === 0) {
     return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '300px',
-          textAlign: 'center',
-        }}
-      >
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          {emptyMessage}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Try adjusting your filters or search query
-        </Typography>
-      </Box>
+      <div className="card p-12 text-center">
+        <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Package className="w-10 h-10 text-primary-600" />
+        </div>
+        <h3 className="text-2xl font-display font-bold text-gray-800 mb-2">{emptyMessage}</h3>
+        <p className="text-gray-600">Try adjusting your filters or search terms</p>
+      </div>
     );
   }
 
+  const gridColsClass = `grid-cols-${columns.xs} sm:grid-cols-${columns.sm} md:grid-cols-${columns.md} lg:grid-cols-${columns.lg}`;
+
   return (
-    <Box>
+    <div className="space-y-8">
       {/* Product Grid */}
-      <Grid container spacing={3}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="product-grid">
         {products.map((product) => (
-          <Grid
-            item
-            xs={columns.xs}
-            sm={columns.sm}
-            md={columns.md}
-            lg={columns.lg}
+          <ProductCard
             key={product.id}
-          >
-            <ProductCard
-              id={product.id}
-              name={product.name}
-              price={product.price}
-              imageUrl={product.images?.[0]?.imageUrl || product.imageUrl || '/placeholder-toy.jpg'}
-              rating={product.averageRating || product.rating || 0}
-              reviewCount={product.reviewCount || 0}
-              inStock={product.stockQuantity > 0 || product.inStock}
-              isFeatured={product.isFeatured || false}
-              isNew={product.isNew || false}
-              onClick={onProductClick}
-            />
-          </Grid>
+            id={product.id}
+            name={product.name}
+            price={product.price}
+            imageUrl={product.imageUrl}
+            rating={product.averageRating || product.rating || 0}
+            reviewCount={product.reviewCount || 0}
+            inStock={product.stockQuantity > 0}
+          />
         ))}
-      </Grid>
+      </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            mt: 6,
-            mb: 4,
-          }}
-        >
-          <Pagination
-            count={totalPages}
-            page={page}
-            onChange={handlePageChange}
-            color="primary"
-            size="large"
-            showFirstButton
-            showLastButton
-            sx={{
-              '& .MuiPagination-ul': {
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-              },
-            }}
-          />
-        </Box>
-      )}
+      {totalPages > 1 && onPageChange && (
+        <div className="flex items-center justify-center space-x-2">
+          {/* Previous Button */}
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page <= 1}
+            className="p-2 rounded-lg border-2 border-primary-200 text-primary-600 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
 
-      {/* Result Summary */}
-      <Box
-        sx={{
-          textAlign: 'center',
-          mt: 2,
-          mb: 4,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          Showing {products.length} product{products.length !== 1 ? 's' : ''}
-          {totalPages > 1 && ` (Page ${page} of ${totalPages})`}
-        </Typography>
-      </Box>
-    </Box>
+          {/* Page Numbers */}
+          <div className="flex items-center space-x-1">
+            {[...Array(totalPages)].map((_, index) => {
+              const pageNumber = index + 1;
+              // Show first, last, current, and adjacent pages
+              if (
+                pageNumber === 1 ||
+                pageNumber === totalPages ||
+                (pageNumber >= page - 1 && pageNumber <= page + 1)
+              ) {
+                return (
+                  <button
+                    key={pageNumber}
+                    onClick={() => onPageChange(pageNumber)}
+                    className={`w-10 h-10 rounded-lg font-semibold transition-all duration-200 ${
+                      pageNumber === page
+                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-toy'
+                        : 'text-gray-700 hover:bg-primary-50'
+                    }`}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              } else if (pageNumber === page - 2 || pageNumber === page + 2) {
+                return (
+                  <span key={pageNumber} className="px-2 text-gray-400">
+                    ...
+                  </span>
+                );
+              }
+              return null;
+            })}
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page >= totalPages}
+            className="p-2 rounded-lg border-2 border-primary-200 text-primary-600 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            aria-label="Next page"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -167,14 +141,10 @@ ProductGrid.propTypes = {
       name: PropTypes.string.isRequired,
       price: PropTypes.number.isRequired,
       imageUrl: PropTypes.string,
-      imageUrls: PropTypes.arrayOf(PropTypes.string),
       averageRating: PropTypes.number,
       rating: PropTypes.number,
       reviewCount: PropTypes.number,
       stockQuantity: PropTypes.number,
-      inStock: PropTypes.bool,
-      isFeatured: PropTypes.bool,
-      isNew: PropTypes.bool,
     })
   ),
   loading: PropTypes.bool,
@@ -182,7 +152,6 @@ ProductGrid.propTypes = {
   page: PropTypes.number,
   totalPages: PropTypes.number,
   onPageChange: PropTypes.func,
-  onProductClick: PropTypes.func,
   emptyMessage: PropTypes.string,
   columns: PropTypes.shape({
     xs: PropTypes.number,

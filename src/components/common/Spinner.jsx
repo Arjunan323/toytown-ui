@@ -1,54 +1,50 @@
-import { CircularProgress, Box, Typography } from '@mui/material';
 import PropTypes from 'prop-types';
 
 /**
- * Spinner component for loading states
- * Can be used as a full-page overlay or inline element
+ * Spinner Component
+ * 
+ * Loading spinner with optional full-page overlay.
+ * Features:
+ * - Customizable size
+ * - Full-page option
+ * - Optional message
+ * - Accessible with ARIA labels
  */
-function Spinner({
-  size = 40,
-  thickness = 4,
-  color = 'primary',
-  fullPage = false,
-  message = '',
-}) {
+const Spinner = ({ fullPage = false, message = '', size = 'medium' }) => {
+  const sizeClasses = {
+    small: 'w-8 h-8 border-2',
+    medium: 'w-12 h-12 border-4',
+    large: 'w-16 h-16 border-4',
+  };
+
   const spinnerElement = (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 2,
-        ...(fullPage && {
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          zIndex: 9999,
-        }),
-      }}
-    >
-      <CircularProgress size={size} thickness={thickness} color={color} />
+    <div className="flex flex-col items-center justify-center space-y-4">
+      <div
+        className={`spinner ${sizeClasses[size]}`}
+        role="status"
+        aria-label="Loading"
+      />
       {message && (
-        <Typography variant="body2" color="text.secondary">
-          {message}
-        </Typography>
+        <p className="text-gray-600 font-medium text-lg">{message}</p>
       )}
-    </Box>
+    </div>
   );
 
+  if (fullPage) {
+    return (
+      <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
+        {spinnerElement}
+      </div>
+    );
+  }
+
   return spinnerElement;
-}
+};
 
 Spinner.propTypes = {
-  size: PropTypes.number,
-  thickness: PropTypes.number,
-  color: PropTypes.oneOf(['primary', 'secondary', 'success', 'error', 'info', 'warning', 'inherit']),
   fullPage: PropTypes.bool,
   message: PropTypes.string,
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
 };
 
 export default Spinner;
