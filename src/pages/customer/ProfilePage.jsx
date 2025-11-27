@@ -44,7 +44,7 @@ const ProfilePage = () => {
 
   const handleSave = async () => {
     try {
-      await dispatch(updateProfile(formData)).unwrap();
+      dispatch(updateUser(formData));
       setIsEditing(false);
     } catch (err) {
       console.error('Failed to update profile:', err);
