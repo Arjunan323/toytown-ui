@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import { 
   Package, 
   ShoppingBag, 
@@ -10,7 +9,6 @@ import {
   AlertCircle,
   Eye
 } from 'lucide-react';
-import { fetchDashboardStats } from '../../store/slices/adminSlice';
 
 /**
  * AdminDashboard Component
