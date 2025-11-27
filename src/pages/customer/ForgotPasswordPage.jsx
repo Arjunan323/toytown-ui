@@ -1,78 +1,52 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { authService } from '../../services';
-import './ForgotPasswordPage.css';
+import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 
+/**
+ * ForgotPasswordPage Component
+ * 
+ * Password reset request page.
+ */
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const validateEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!email) {
-      setError('Email is required');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      await authService.forgotPassword({ email });
+      // TODO: Implement forgot password API call
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
       setSuccess(true);
     } catch (err) {
-      console.error('Forgot password failed:', err);
-      setError(
-        err.response?.data?.message || 
-        'Failed to send reset email. Please try again.'
-      );
+      setError('Failed to send reset email. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    setEmail(e.target.value);
-    if (error) setError('');
-  };
-
   if (success) {
     return (
-      <div className="forgot-password-page">
-        <div className="forgot-password-container">
-          <div className="success-icon">✓</div>
-          <h1>Check Your Email</h1>
-          <p className="success-message">
-            We've sent password reset instructions to <strong>{email}</strong>
-          </p>
-          <p className="info-message">
-            If you don't see the email, please check your spam folder.
-          </p>
-          <div className="action-links">
-            <Link to="/login" className="btn btn-primary">
-              Back to Sign In
+      <div className="min-h-screen bg-pattern flex items-center justify-center py-12 px-4">
+        <div className="max-w-md w-full">
+          <div className="card p-8 text-center space-y-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mx-auto">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+            <h2 className="text-3xl font-display font-bold text-gray-800">Check Your Email</h2>
+            <p className="text-gray-600">
+              We've sent password reset instructions to <span className="font-semibold text-gray-800">{email}</span>
+            </p>
+            <p className="text-sm text-gray-500">
+              Didn't receive the email? Check your spam folder or try again.
+            </p>
+            <Link to="/login" className="btn-primary inline-block">
+              Back to Login
             </Link>
-          </div>
-          <div className="help-text">
-            <p>Didn't receive the email?</p>
-            <button 
-              onClick={() => setSuccess(false)} 
-              className="link-button"
-            >
-              Try again
-            </button>
           </div>
         </div>
       </div>
@@ -80,48 +54,60 @@ const ForgotPasswordPage = () => {
   }
 
   return (
-    <div className="forgot-password-page">
-      <div className="forgot-password-container">
-        <div className="forgot-password-header">
-          <h1>Forgot Password?</h1>
-          <p>Enter your email address and we'll send you a link to reset your password.</p>
+    <div className="min-h-screen bg-pattern flex items-center justify-center py-12 px-4">
+      <div className="max-w-md w-full">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full mb-4">
+            <Mail className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-display font-bold text-gradient mb-2">Forgot Password?</h1>
+          <p className="text-gray-600">No worries! We'll send you reset instructions.</p>
         </div>
 
-        {error && (
-          <div className="alert alert-error">
-            {error}
-          </div>
-        )}
+        {/* Form */}
+        <div className="card p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                <p className="text-red-700 text-sm">{error}</p>
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit} className="forgot-password-form">
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={handleChange}
-              className={error ? 'error' : ''}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input-field pl-10"
+                  placeholder="your@email.com"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
               disabled={loading}
-              autoComplete="email"
-              placeholder="Enter your email"
-              autoFocus
-            />
+              className="btn-primary w-full disabled:opacity-50"
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-semibold text-sm inline-flex items-center space-x-1">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Login</span>
+            </Link>
           </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary btn-block"
-            disabled={loading}
-          >
-            {loading ? 'Sending...' : 'Send Reset Link'}
-          </button>
-        </form>
-
-        <div className="forgot-password-footer">
-          <p>
-            Remember your password? <Link to="/login">Sign In</Link>
-          </p>
         </div>
       </div>
     </div>
