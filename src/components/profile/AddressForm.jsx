@@ -1,280 +1,168 @@
 import { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
-import {
-  Box,
-  TextField,
-  Button,
-  Grid,
-  FormControlLabel,
-  Checkbox,
-} from '@mui/material';
-import { addAddress, updateAddress } from '../../store/slices/profileSlice';
+import { Save, X } from 'lucide-react';
+import { addShippingAddress, updateShippingAddress } from '../../store/slices/orderSlice';
 
-const AddressForm = ({ address, onSuccess, onCancel }) => {
+/**
+ * AddressForm Component
+ * 
+ * Form for adding or editing shipping addresses.
+ */
+const AddressForm = ({ address = null, onSuccess, onCancel }) => {
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     recipientName: '',
-    phoneNumber: '',
-    streetAddress: '',
-    apartmentNumber: '',
+    addressLine1: '',
+    addressLine2: '',
     city: '',
     state: '',
     postalCode: '',
-    country: 'USA',
-    addressLabel: '',
-    isDefault: false,
+    phoneNumber: '',
   });
-  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (address) {
       setFormData({
         recipientName: address.recipientName || '',
-        phoneNumber: address.phoneNumber || '',
-        streetAddress: address.streetAddress || '',
-        apartmentNumber: address.apartmentNumber || '',
+        addressLine1: address.addressLine1 || '',
+        addressLine2: address.addressLine2 || '',
         city: address.city || '',
         state: address.state || '',
         postalCode: address.postalCode || '',
-        country: address.country || 'USA',
-        addressLabel: address.addressLabel || '',
-        isDefault: address.isDefault || false,
+        phoneNumber: address.phoneNumber || '',
       });
     }
   }, [address]);
 
   const handleChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.recipientName.trim()) {
-      newErrors.recipientName = 'Recipient name is required';
-    }
-
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
-      newErrors.phoneNumber = 'Phone number must be 10 digits';
-    }
-
-    if (!formData.streetAddress.trim()) {
-      newErrors.streetAddress = 'Street address is required';
-    }
-
-    if (!formData.city.trim()) {
-      newErrors.city = 'City is required';
-    }
-
-    if (!formData.state.trim()) {
-      newErrors.state = 'State is required';
-    }
-
-    if (!formData.postalCode.trim()) {
-      newErrors.postalCode = 'Postal code is required';
-    } else if (!/^\d{5}(-\d{4})?$/.test(formData.postalCode)) {
-      newErrors.postalCode = 'Invalid postal code (use format: 12345 or 12345-6789)';
-    }
-
-    if (!formData.country.trim()) {
-      newErrors.country = 'Country is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
     setLoading(true);
 
     try {
       if (address) {
-        await dispatch(
-          updateAddress({
-            addressId: address.addressId,
-            addressData: formData,
-          })
-        ).unwrap();
+        await dispatch(updateShippingAddress({ id: address.id, ...formData })).unwrap();
       } else {
-        await dispatch(addAddress(formData)).unwrap();
+        await dispatch(addShippingAddress(formData)).unwrap();
       }
       onSuccess();
     } catch (err) {
       console.error('Failed to save address:', err);
-      setErrors({ submit: err.message || 'Failed to save address' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Address Label (Optional)"
-            name="addressLabel"
-            value={formData.addressLabel}
-            onChange={handleChange}
-            placeholder="e.g., Home, Office"
-            helperText="Give this address a name for easy identification"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            required
-            label="Recipient Name"
+    <div className="card p-6 bg-gray-50">
+      <h3 className="text-xl font-display font-bold text-gray-800 mb-6">
+        {address ? 'Edit Address' : 'Add New Address'}
+      </h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
             name="recipientName"
             value={formData.recipientName}
             onChange={handleChange}
-            error={Boolean(errors.recipientName)}
-            helperText={errors.recipientName}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
+            placeholder="Recipient Name"
             required
-            label="Phone Number"
+            className="input-field"
+          />
+          <input
             name="phoneNumber"
             value={formData.phoneNumber}
             onChange={handleChange}
-            error={Boolean(errors.phoneNumber)}
-            helperText={errors.phoneNumber}
-            placeholder="1234567890"
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
+            placeholder="Phone Number"
             required
-            label="Street Address"
-            name="streetAddress"
-            value={formData.streetAddress}
-            onChange={handleChange}
-            error={Boolean(errors.streetAddress)}
-            helperText={errors.streetAddress}
+            className="input-field"
           />
-        </Grid>
+        </div>
 
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Apartment, Suite, etc. (Optional)"
-            name="apartmentNumber"
-            value={formData.apartmentNumber}
-            onChange={handleChange}
-          />
-        </Grid>
+        <input
+          name="addressLine1"
+          value={formData.addressLine1}
+          onChange={handleChange}
+          placeholder="Address Line 1"
+          required
+          className="input-field"
+        />
 
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            required
-            label="City"
+        <input
+          name="addressLine2"
+          value={formData.addressLine2}
+          onChange={handleChange}
+          placeholder="Address Line 2 (Optional)"
+          className="input-field"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
             name="city"
             value={formData.city}
             onChange={handleChange}
-            error={Boolean(errors.city)}
-            helperText={errors.city}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={3}>
-          <TextField
-            fullWidth
+            placeholder="City"
             required
-            label="State"
+            className="input-field"
+          />
+          <input
             name="state"
             value={formData.state}
             onChange={handleChange}
-            error={Boolean(errors.state)}
-            helperText={errors.state}
-            placeholder="CA"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={3}>
-          <TextField
-            fullWidth
+            placeholder="State"
             required
-            label="ZIP Code"
+            className="input-field"
+          />
+          <input
             name="postalCode"
             value={formData.postalCode}
             onChange={handleChange}
-            error={Boolean(errors.postalCode)}
-            helperText={errors.postalCode}
-            placeholder="12345"
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
+            placeholder="Postal Code"
             required
-            label="Country"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            error={Boolean(errors.country)}
-            helperText={errors.country}
+            className="input-field"
           />
-        </Grid>
+        </div>
 
-        <Grid item xs={12}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={formData.isDefault}
-                onChange={handleChange}
-                name="isDefault"
-              />
-            }
-            label="Set as default address"
-          />
-        </Grid>
-      </Grid>
-
-      {errors.submit && (
-        <Box sx={{ mt: 2, color: 'error.main' }}>
-          {errors.submit}
-        </Box>
-      )}
-
-      <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-        <Button onClick={onCancel} disabled={loading}>
-          Cancel
-        </Button>
-        <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? 'Saving...' : address ? 'Update Address' : 'Add Address'}
-        </Button>
-      </Box>
-    </Box>
+        <div className="flex space-x-4 pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary flex-1 flex items-center justify-center space-x-2"
+          >
+            <Save className="w-5 h-5" />
+            <span>{loading ? 'Saving...' : 'Save Address'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="btn-outline flex-1 flex items-center justify-center space-x-2"
+          >
+            <X className="w-5 h-5" />
+            <span>Cancel</span>
+          </button>
+        </div>
+      </form>
+    </div>
   );
+};
+
+AddressForm.propTypes = {
+  address: PropTypes.shape({
+    id: PropTypes.number,
+    recipientName: PropTypes.string,
+    addressLine1: PropTypes.string,
+    addressLine2: PropTypes.string,
+    city: PropTypes.string,
+    state: PropTypes.string,
+    postalCode: PropTypes.string,
+    phoneNumber: PropTypes.string,
+  }),
+  onSuccess: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
 };
 
 export default AddressForm;
