@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Package, Eye, Calendar, CreditCard, Filter } from 'lucide-react';
 import Spinner from '../../components/common/Spinner';
-import { fetchMyOrders } from '../../store/slices/orderSlice';
+import { fetchOrderHistory } from '../../store/slices/orderSlice';
 import { format } from 'date-fns';
 
 /**
