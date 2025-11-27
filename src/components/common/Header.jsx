@@ -1,5 +1,4 @@
-import { AppBar, Toolbar, Typography, Button, IconButton, Badge, Box, useMediaQuery, useTheme, Menu, MenuItem, Divider } from '@mui/material';
-import { ShoppingCart, Person, Menu as MenuIcon, Search as SearchIcon, AccountCircle } from '@mui/icons-material';
+import { ShoppingCart, User, Menu, Search, Home, Package } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,195 +8,198 @@ import SearchBar from '../search/SearchBar';
 function Header() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   const { totalItems } = useSelector((state) => state.cart);
   const [showSearchBar, setShowSearchBar] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const handleLogout = () => {
-    handleMenuClose();
+    setShowUserMenu(false);
     dispatch(logout());
     navigate('/');
   };
 
   const handleNavigate = (path) => {
-    handleMenuClose();
+    setShowUserMenu(false);
+    setShowMobileMenu(false);
     navigate(path);
   };
 
   const handleSearch = (query) => {
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query)}`);
-      setShowSearchBar(false); // Hide search on mobile after search
+      setShowSearchBar(false);
     }
   };
 
-  const toggleSearchBar = () => {
-    setShowSearchBar(!showSearchBar);
-  };
-
   return (
-    <AppBar position="sticky">
-      <Toolbar sx={{ flexWrap: 'wrap', gap: 1 }}>
-        {/* Menu icon for mobile (future enhancement) */}
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          sx={{ mr: 1, display: { sm: 'none' } }}
-        >
-          <MenuIcon />
-        </IconButton>
-
-        {/* Logo/Brand */}
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ 
-            flexGrow: 0, 
-            cursor: 'pointer', 
-            fontWeight: 600,
-            fontSize: { xs: '1rem', sm: '1.25rem' },
-            whiteSpace: 'nowrap'
-          }}
-          onClick={() => navigate('/')}
-        >
-          {import.meta.env.VITE_APP_NAME || "Aadhav's ToyTown"}
-        </Typography>
-
-        {/* Navigation Links - Hidden on very small screens */}
-        {!isSmallScreen && (
-          <Box sx={{ flexGrow: 0, display: 'flex', ml: { xs: 1, md: 3 }, gap: { xs: 0.5, md: 2 } }}>
-            <Button color="inherit" onClick={() => navigate('/')} size="small">
-              Home
-            </Button>
-            <Button color="inherit" onClick={() => navigate('/products')} size="small">
-              Products
-            </Button>
-          </Box>
-        )}
-
-        {/* Search Bar - Desktop */}
-        {!isMobile && (
-          <Box sx={{ flexGrow: 1, mx: 3, maxWidth: 500 }}>
-            <SearchBar onSearch={handleSearch} placeholder="Search toys..." />
-          </Box>
-        )}
-
-        {/* Spacer for mobile */}
-        {isMobile && <Box sx={{ flexGrow: 1 }} />}
-
-        {/* Right side actions */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
-          {/* Search Icon - Mobile */}
-          {isMobile && (
-            <IconButton
-              color="inherit"
-              aria-label="search"
-              onClick={toggleSearchBar}
-            >
-              <SearchIcon />
-            </IconButton>
-          )}
-
-          {/* Shopping Cart */}
-          <IconButton
-            color="inherit"
-            aria-label="shopping cart"
-            onClick={() => navigate('/cart')}
+    <header className="bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-500 text-white shadow-lg sticky top-0 z-50">
+      <div className="container-custom">
+        <div className="flex items-center justify-between py-4">
+          {/* Logo */}
+          <div 
+            className="flex items-center space-x-2 cursor-pointer group"
+            onClick={() => navigate('/')}
           >
-            <Badge badgeContent={totalItems} color="secondary">
-              <ShoppingCart />
-            </Badge>
-          </IconButton>
+            <div className="bg-white rounded-full p-2 group-hover:scale-110 transition-transform duration-200">
+              <Package className="w-6 h-6 text-primary-600" />
+            </div>
+            <h1 className="text-2xl font-display font-bold tracking-tight hidden sm:block">
+              {import.meta.env.VITE_APP_NAME || "Aadhav's ToyTown"}
+            </h1>
+          </div>
 
-          {/* User Menu */}
-          {isAuthenticated ? (
-            <>
-              <IconButton
-                color="inherit"
-                aria-label="account"
-                onClick={handleMenuOpen}
-              >
-                <AccountCircle />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-              >
-                <MenuItem disabled>
-                  <Typography variant="body2" color="text.secondary">
-                    {user?.email || 'Account'}
-                  </Typography>
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={() => handleNavigate('/profile')}>
-                  My Profile
-                </MenuItem>
-                <MenuItem onClick={() => handleNavigate('/order-history')}>
-                  Order History
-                </MenuItem>
-                <MenuItem onClick={() => handleNavigate('/my-reviews')}>
-                  My Reviews
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleLogout}>
-                  Logout
-                </MenuItem>
-              </Menu>
-            </>
-          ) : (
-            <>
-              <Button 
-                color="inherit" 
-                onClick={() => navigate('/login')}
-                size="small"
-              >
-                Login
-              </Button>
-              <Button
-                variant="outlined"
-                color="inherit"
-                onClick={() => navigate('/register')}
-                size="small"
-                sx={{ ml: { xs: 0.5, sm: 1 }, display: { xs: 'none', sm: 'inline-flex' } }}
-              >
-                Sign Up
-              </Button>
-            </>
-          )}
-        </Box>
-      </Toolbar>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <button 
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-1 hover:text-yellow-200 transition-colors duration-200 font-medium"
+            >
+              <Home className="w-5 h-5" />
+              <span>Home</span>
+            </button>
+            <button 
+              onClick={() => navigate('/products')}
+              className="flex items-center space-x-1 hover:text-yellow-200 transition-colors duration-200 font-medium"
+            >
+              <Package className="w-5 h-5" />
+              <span>Products</span>
+            </button>
+          </nav>
 
-      {/* Mobile Search Bar - Expandable */}
-      {isMobile && showSearchBar && (
-        <Toolbar sx={{ pt: 0, pb: 2 }}>
-          <Box sx={{ width: '100%' }}>
-            <SearchBar onSearch={handleSearch} placeholder="Search toys..." />
-          </Box>
-        </Toolbar>
-      )}
-    </AppBar>
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:block flex-1 max-w-md mx-6">
+            <SearchBar onSearch={handleSearch} placeholder="Search for toys..." />
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center space-x-3">
+            {/* Search Icon - Mobile */}
+            <button
+              onClick={() => setShowSearchBar(!showSearchBar)}
+              className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              aria-label="Search"
+            >
+              <Search className="w-6 h-6" />
+            </button>
+
+            {/* Cart */}
+            <button
+              onClick={() => navigate('/cart')}
+              className="relative p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-secondary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-bounce">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+
+            {/* User Menu */}
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+                  aria-label="User Menu"
+                >
+                  <User className="w-6 h-6" />
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-toy-hover overflow-hidden z-50">
+                    <div className="px-4 py-3 bg-primary-50 border-b border-primary-100">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{user?.email || 'Account'}</p>
+                    </div>
+                    <div className="py-2">
+                      <button
+                        onClick={() => handleNavigate('/profile')}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors duration-200"
+                      >
+                        My Profile
+                      </button>
+                      <button
+                        onClick={() => handleNavigate('/order-history')}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors duration-200"
+                      >
+                        Order History
+                      </button>
+                      <button
+                        onClick={() => handleNavigate('/my-reviews')}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 transition-colors duration-200"
+                      >
+                        My Reviews
+                      </button>
+                    </div>
+                    <div className="border-t border-gray-200">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 font-semibold hover:bg-white/10 rounded-lg transition-colors duration-200"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="hidden sm:block px-4 py-2 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 shadow-md"
+                >
+                  Sign Up
+                </button>
+              </div>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="md:hidden p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              aria-label="Menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Search Bar */}
+        {showSearchBar && (
+          <div className="md:hidden pb-4 animate-slide-up">
+            <SearchBar onSearch={handleSearch} placeholder="Search for toys..." />
+          </div>
+        )}
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="md:hidden pb-4 animate-slide-up">
+            <nav className="flex flex-col space-y-2">
+              <button
+                onClick={() => handleNavigate('/')}
+                className="text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              >
+                Home
+              </button>
+              <button
+                onClick={() => handleNavigate('/products')}
+                className="text-left px-4 py-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              >
+                Products
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
   );
 }
 
