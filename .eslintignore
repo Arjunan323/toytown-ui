@@ -1,0 +1,46 @@
+# ToyTown Frontend ESLint Ignore File
+# Files and directories that should not be linted
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+.vite/
+.cache/
+
+# Coverage reports
+coverage/
+.nyc_output/
+*.lcov
+
+# Environment files
+.env
+.env.*
+
+# Configuration files
+vite.config.js
+vite.config.ts
+lighthouserc.json
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# Test artifacts
+cypress/videos/
+cypress/screenshots/
+
+# Generated files
+*.min.js
+*.bundle.js
+
+# Public assets
+public/

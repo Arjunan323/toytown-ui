@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "email": "customer@example.com",
+    "password": "Customer123!",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phoneNumber": "+919876543210",
+    "role": "CUSTOMER",
+    "isEmailVerified": true,
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "email": "admin@toytown.com",
+    "password": "Admin123!",
+    "firstName": "Admin",
+    "lastName": "User",
+    "phoneNumber": "+919876543211",
+    "role": "ADMIN",
+    "isEmailVerified": true,
+    "isActive": true
+  },
+  {
+    "id": 3,
+    "email": "customer2@example.com",
+    "password": "Customer123!",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phoneNumber": "+919876543212",
+    "role": "CUSTOMER",
+    "isEmailVerified": true,
+    "isActive": true
+  },
+  {
+    "id": 4,
+    "email": "newuser@example.com",
+    "password": "NewUser123!",
+    "firstName": "New",
+    "lastName": "User",
+    "phoneNumber": "+919876543213",
+    "role": "CUSTOMER",
+    "isEmailVerified": false,
+    "isActive": true
+  },
+  {
+    "id": 5,
+    "email": "inactive@example.com",
+    "password": "Inactive123!",
+    "firstName": "Inactive",
+    "lastName": "User",
+    "phoneNumber": "+919876543214",
+    "role": "CUSTOMER",
+    "isEmailVerified": true,
+    "isActive": false
+  }
+]

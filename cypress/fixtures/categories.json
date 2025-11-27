@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Action Figures",
+    "description": "Superhero and character action figures with accessories",
+    "imageUrl": "https://example.com/images/categories/action-figures.jpg",
+    "productCount": 15
+  },
+  {
+    "id": 2,
+    "name": "Building Blocks",
+    "description": "Creative building blocks and construction sets",
+    "imageUrl": "https://example.com/images/categories/building-blocks.jpg",
+    "productCount": 12
+  },
+  {
+    "id": 3,
+    "name": "Puzzles",
+    "description": "Jigsaw puzzles and brain teasers for all ages",
+    "imageUrl": "https://example.com/images/categories/puzzles.jpg",
+    "productCount": 20
+  },
+  {
+    "id": 4,
+    "name": "Remote Control Toys",
+    "description": "RC cars, drones, and other remote-controlled toys",
+    "imageUrl": "https://example.com/images/categories/rc-toys.jpg",
+    "productCount": 8
+  },
+  {
+    "id": 5,
+    "name": "Plush Toys",
+    "description": "Soft and cuddly stuffed animals and plush toys",
+    "imageUrl": "https://example.com/images/categories/plush-toys.jpg",
+    "productCount": 25
+  },
+  {
+    "id": 6,
+    "name": "Educational Toys",
+    "description": "Learning and educational toys for cognitive development",
+    "imageUrl": "https://example.com/images/categories/educational-toys.jpg",
+    "productCount": 18
+  }
+]

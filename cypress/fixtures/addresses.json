@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "customerId": 1,
+    "addressLine1": "123 Main Street",
+    "addressLine2": "Apartment 4B",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "postalCode": "400001",
+    "country": "India",
+    "isDefault": true
+  },
+  {
+    "id": 2,
+    "customerId": 1,
+    "addressLine1": "456 Park Avenue",
+    "addressLine2": "Floor 2",
+    "city": "Delhi",
+    "state": "Delhi",
+    "postalCode": "110001",
+    "country": "India",
+    "isDefault": false
+  },
+  {
+    "id": 3,
+    "customerId": 3,
+    "addressLine1": "789 Beach Road",
+    "addressLine2": "",
+    "city": "Goa",
+    "state": "Goa",
+    "postalCode": "403001",
+    "country": "India",
+    "isDefault": true
+  },
+  {
+    "id": 4,
+    "customerId": 1,
+    "addressLine1": "321 Office Complex",
+    "addressLine2": "Building C, 3rd Floor",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "postalCode": "560001",
+    "country": "India",
+    "isDefault": false
+  }
+]

@@ -1,0 +1,181 @@
+{
+  "validAdmin": {
+    "username": "admin",
+    "password": "Admin@123",
+    "role": "ADMIN"
+  },
+  "testAdmin": {
+    "username": "testadmin",
+    "password": "TestAdmin@123",
+    "email": "testadmin@toytown.com",
+    "role": "ADMIN"
+  },
+  "sampleProducts": [
+    {
+      "name": "LEGO Star Wars Millennium Falcon",
+      "description": "Build the iconic Millennium Falcon from Star Wars with this detailed LEGO set.",
+      "price": 159.99,
+      "stockQuantity": 25,
+      "minAge": 9,
+      "maxAge": 14,
+      "sku": "LEGO-SW-001",
+      "categoryId": 1,
+      "manufacturerId": 1,
+      "isFeatured": true
+    },
+    {
+      "name": "Monopoly Classic Board Game",
+      "description": "The classic property trading board game for the whole family.",
+      "price": 24.99,
+      "stockQuantity": 100,
+      "minAge": 8,
+      "maxAge": 99,
+      "sku": "HASBRO-MONO-001",
+      "categoryId": 2,
+      "manufacturerId": 2,
+      "isFeatured": false
+    },
+    {
+      "name": "Barbie Dreamhouse",
+      "description": "Three-story dollhouse with lights, sounds, and 70+ accessories.",
+      "price": 199.99,
+      "stockQuantity": 15,
+      "minAge": 3,
+      "maxAge": 10,
+      "sku": "MATTEL-BARB-001",
+      "categoryId": 3,
+      "manufacturerId": 3,
+      "isFeatured": true
+    },
+    {
+      "name": "Hot Wheels 20-Car Gift Pack",
+      "description": "Includes 20 1:64 scale die-cast vehicles in a variety of styles.",
+      "price": 19.99,
+      "stockQuantity": 5,
+      "minAge": 3,
+      "maxAge": 10,
+      "sku": "MATTEL-HW-001",
+      "categoryId": 4,
+      "manufacturerId": 3,
+      "isFeatured": false
+    },
+    {
+      "name": "Nerf Elite 2.0 Commander Blaster",
+      "description": "Motorized Nerf blaster with 12-dart clip and tactical rails.",
+      "price": 34.99,
+      "stockQuantity": 50,
+      "minAge": 8,
+      "maxAge": 14,
+      "sku": "HASBRO-NERF-001",
+      "categoryId": 5,
+      "manufacturerId": 2,
+      "isFeatured": true
+    }
+  ],
+  "lowStockProduct": {
+    "name": "Ravensburger 1000 Piece Puzzle",
+    "description": "Beautiful landscape puzzle with 1000 pieces.",
+    "price": 24.99,
+    "stockQuantity": 3,
+    "minAge": 10,
+    "maxAge": 99,
+    "sku": "RAVEN-PUZ-001",
+    "categoryId": 6,
+    "manufacturerId": 4,
+    "isFeatured": false
+  },
+  "discontinuedProduct": {
+    "name": "Vintage Action Figure",
+    "description": "Discontinued collectible action figure from 1990s.",
+    "price": 49.99,
+    "stockQuantity": 0,
+    "minAge": 12,
+    "maxAge": 99,
+    "sku": "VINTAGE-ACT-001",
+    "categoryId": 1,
+    "manufacturerId": 5,
+    "isFeatured": false,
+    "discontinued": true
+  },
+  "invalidProduct": {
+    "name": "",
+    "description": "Invalid product with missing required fields",
+    "price": -10,
+    "stockQuantity": -5,
+    "minAge": 15,
+    "maxAge": 5,
+    "sku": "",
+    "categoryId": null,
+    "manufacturerId": null
+  },
+  "updateRequests": {
+    "stockUpdate": {
+      "stockQuantity": 250
+    },
+    "priceUpdate": {
+      "price": 29.99
+    },
+    "statusUpdate": {
+      "discontinued": true
+    }
+  },
+  "categories": [
+    {
+      "id": 1,
+      "name": "Action Figures",
+      "slug": "action-figures"
+    },
+    {
+      "id": 2,
+      "name": "Board Games",
+      "slug": "board-games"
+    },
+    {
+      "id": 3,
+      "name": "Dolls & Dollhouses",
+      "slug": "dolls-dollhouses"
+    },
+    {
+      "id": 4,
+      "name": "Vehicles & Diecast",
+      "slug": "vehicles-diecast"
+    },
+    {
+      "id": 5,
+      "name": "Outdoor Toys",
+      "slug": "outdoor-toys"
+    },
+    {
+      "id": 6,
+      "name": "Puzzles",
+      "slug": "puzzles"
+    }
+  ],
+  "manufacturers": [
+    {
+      "id": 1,
+      "name": "LEGO",
+      "country": "Denmark"
+    },
+    {
+      "id": 2,
+      "name": "Hasbro",
+      "country": "USA"
+    },
+    {
+      "id": 3,
+      "name": "Mattel",
+      "country": "USA"
+    },
+    {
+      "id": 4,
+      "name": "Ravensburger",
+      "country": "Germany"
+    },
+    {
+      "id": 5,
+      "name": "Generic Toys Co.",
+      "country": "China"
+    }
+  ]
+}
