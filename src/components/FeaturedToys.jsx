@@ -1,134 +1,51 @@
-import { useNavigate } from 'react-router-dom';
-import { Star } from 'lucide-react';
 import PropTypes from 'prop-types';
-import './FeaturedToys.css';
+import ProductCard from './product/ProductCard';
+import { Sparkles } from 'lucide-react';
 
 /**
- * Featured toys section for homepage.
- * Displays grid of featured products with quick actions.
+ * FeaturedToys Component
+ * 
+ * Displays a grid of featured toy products on the homepage.
+ * Uses the ProductCard component for individual product display.
  */
 const FeaturedToys = ({ products }) => {
-  const navigate = useNavigate();
-
   if (!products || products.length === 0) {
     return null;
   }
 
-  const handleProductClick = (productId) => {
-    navigate(`/products/${productId}`);
-  };
-
-  const handleViewAllClick = () => {
-    navigate('/products?featured=true');
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(price);
-  };
-
-  const renderStars = (rating) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    const stars = [];
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={`full-${i}`} size={16} fill="gold" stroke="gold" />);
-    }
-
-    if (hasHalfStar) {
-      stars.push(<Star key="half" size={16} fill="url(#half)" stroke="gold" />);
-    }
-
-    const emptyStars = 5 - stars.length;
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<Star key={`empty-${i}`} size={16} stroke="gold" fill="none" />);
-    }
-
-    return stars;
-  };
-
   return (
-    <section className="featured-toys">
-      <div className="featured-header">
-        <h2 className="featured-title">Featured Toys</h2>
-        <button 
-          className="view-all-btn"
-          onClick={handleViewAllClick}
-        >
-          View All Featured
-        </button>
-      </div>
-
-      <div className="featured-grid">
-        {products.map((product) => (
-          <div 
-            key={product.id}
-            className="featured-card"
-            onClick={() => handleProductClick(product.id)}
-          >
-            <div className="featured-image-container">
-              <img 
-                src={product.primaryImageUrl || '/images/placeholder.png'} 
-                alt={product.name}
-                className="featured-image"
-              />
-              {product.discountPercentage > 0 && (
-                <span className="discount-badge">
-                  -{product.discountPercentage}%
-                </span>
-              )}
-            </div>
-
-            <div className="featured-content">
-              <h3 className="featured-product-name">{product.name}</h3>
-              
-              <div className="featured-rating">
-                <div className="stars">
-                  <svg width="0" height="0">
-                    <defs>
-                      <linearGradient id="half">
-                        <stop offset="50%" stopColor="gold" />
-                        <stop offset="50%" stopColor="transparent" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  {renderStars(product.averageRating || 0)}
-                </div>
-                <span className="rating-count">
-                  ({product.reviewCount || 0})
-                </span>
-              </div>
-
-              <div className="featured-pricing">
-                {product.discountPercentage > 0 ? (
-                  <>
-                    <span className="featured-original-price">
-                      {formatPrice(product.price)}
-                    </span>
-                    <span className="featured-sale-price">
-                      {formatPrice(product.salePrice)}
-                    </span>
-                  </>
-                ) : (
-                  <span className="featured-price">
-                    {formatPrice(product.price)}
-                  </span>
-                )}
-              </div>
-
-              <div className="featured-stock">
-                {product.stockQuantity > 0 ? (
-                  <span className="in-stock">In Stock</span>
-                ) : (
-                  <span className="out-of-stock">Out of Stock</span>
-                )}
-              </div>
-            </div>
+    <section className="mb-16" data-testid="featured-toys">
+      <div className="container-custom">
+        {/* Section Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center space-x-2 mb-4">
+            <Sparkles className="w-8 h-8 text-secondary-500 animate-bounce-slow" />
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-gradient">
+              Featured Toys
+            </h2>
+            <Sparkles className="w-8 h-8 text-primary-500 animate-bounce-slow" />
           </div>
-        ))}
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Handpicked favorites that kids absolutely love!
+          </p>
+        </div>
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              name={product.name}
+              price={product.price}
+              imageUrl={product.imageUrl}
+              rating={product.averageRating || product.rating || 0}
+              reviewCount={product.reviewCount || 0}
+              inStock={product.stockQuantity > 0}
+              isFeatured={true}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -140,18 +57,13 @@ FeaturedToys.propTypes = {
       id: PropTypes.number.isRequired,
       name: PropTypes.string.isRequired,
       price: PropTypes.number.isRequired,
-      salePrice: PropTypes.number,
-      discountPercentage: PropTypes.number,
-      primaryImageUrl: PropTypes.string,
+      imageUrl: PropTypes.string,
       averageRating: PropTypes.number,
+      rating: PropTypes.number,
       reviewCount: PropTypes.number,
       stockQuantity: PropTypes.number,
     })
   ),
-};
-
-FeaturedToys.defaultProps = {
-  products: [],
 };
 
 export default FeaturedToys;
