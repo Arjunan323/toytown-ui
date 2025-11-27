@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { Star, MessageSquare, Trash2, Edit, Package } from 'lucide-react';
+import { Star, MessageSquare, Package } from 'lucide-react';
 import Spinner from '../../components/common/Spinner';
-import { fetchMyReviews, deleteReview } from '../../store/slices/reviewSlice';
+import { fetchMyReviews } from '../../store/slices/reviewSlice';
 import { format } from 'date-fns';
 
 /**
