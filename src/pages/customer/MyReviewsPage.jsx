@@ -113,17 +113,6 @@ const MyReviewsPage = () => {
 
                     {/* Review Comment */}
                     <p className="text-gray-700 leading-relaxed">{review.comment}</p>
-
-                    {/* Actions */}
-                    <div className="flex items-center space-x-4 pt-2">
-                      <button
-                        onClick={() => handleDelete(review.id)}
-                        className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors duration-200"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="text-sm font-medium">Delete</span>
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
