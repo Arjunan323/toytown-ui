@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { myOrders, loading, error } = useSelector((state) => state.order);
+  const { myOrders, loading, error } = useSelector((state) => state.order || {});
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
