@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TextField, IconButton, InputAdornment, Box } from '@mui/material';
-import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
+import { Search, X } from 'lucide-react';
 import PropTypes from 'prop-types';
 
 /**
@@ -58,45 +57,29 @@ function SearchBar({ onSearch, initialValue = '', placeholder = 'Search for toys
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: { xs: '100%', sm: 400, md: 500 } }}>
-      <TextField
-        fullWidth
-        size="small"
+    <div className="relative w-full">
+      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <Search className="w-5 h-5" />
+      </div>
+      <input
+        type="text"
         value={searchTerm}
         onChange={handleChange}
         onKeyPress={handleKeyPress}
         placeholder={placeholder}
         aria-label="Search for toys"
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon color="action" />
-            </InputAdornment>
-          ),
-          endAdornment: searchTerm && (
-            <InputAdornment position="end">
-              <IconButton
-                aria-label="Clear search"
-                onClick={handleClear}
-                edge="end"
-                size="small"
-              >
-                <ClearIcon />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          backgroundColor: 'background.paper',
-          borderRadius: 1,
-          '& .MuiOutlinedInput-root': {
-            '&:hover fieldset': {
-              borderColor: 'primary.main',
-            },
-          },
-        }}
+        className="w-full pl-10 pr-10 py-2 bg-white/90 border-2 border-transparent rounded-xl focus:outline-none focus:border-white focus:bg-white transition-all duration-200 text-gray-800 placeholder-gray-400"
       />
-    </Box>
+      {searchTerm && (
+        <button
+          onClick={handleClear}
+          aria-label="Clear search"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+    </div>
   );
 }
 

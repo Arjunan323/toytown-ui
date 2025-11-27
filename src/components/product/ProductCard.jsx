@@ -1,24 +1,7 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
-import {
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Typography,
-  Button,
-  Rating,
-  Box,
-  Chip,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
-  AddShoppingCart as AddShoppingCartIcon,
-  Favorite as FavoriteIcon,
-  FavoriteBorder as FavoriteBorderIcon,
-} from '@mui/icons-material';
+import { ShoppingCart, Heart, Star } from 'lucide-react';
 import { addToCart } from '../../store/slices/cartSlice';
 import { useNavigate } from 'react-router-dom';
 
@@ -88,135 +71,107 @@ const ProductCard = ({
   };
 
   return (
-    <Card
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        cursor: 'pointer',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4,
-        },
-      }}
+    <div
+      className="group card card-hover cursor-pointer overflow-hidden"
       onClick={handleCardClick}
+      data-testid="product-card"
     >
-      {/* Badge Overlay */}
-      {(isFeatured || isNew || !inStock) && (
-        <Box
-          sx={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            zIndex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 0.5,
-          }}
-        >
-          {isFeatured && (
-            <Chip label="Featured" color="primary" size="small" />
-          )}
-          {isNew && (
-            <Chip label="New" color="success" size="small" />
-          )}
-          {!inStock && (
-            <Chip label="Out of Stock" color="error" size="small" />
-          )}
-        </Box>
-      )}
-
-      {/* Favorite Button */}
-      <IconButton
-        sx={{
-          position: 'absolute',
-          top: 8,
-          right: 8,
-          zIndex: 1,
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          },
-        }}
-        onClick={handleFavoriteClick}
-        aria-label="Add to favorites"
-      >
-        {isFavorite ? (
-          <FavoriteIcon color="error" />
-        ) : (
-          <FavoriteBorderIcon />
+      {/* Image Container */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-50 to-secondary-50">
+        {/* Badges */}
+        {(isFeatured || isNew || !inStock) && (
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+            {isFeatured && (
+              <span className="badge badge-primary text-xs font-bold shadow-md">
+                ⭐ Featured
+              </span>
+            )}
+            {isNew && (
+              <span className="badge badge-success text-xs font-bold shadow-md">
+                🎉 New
+              </span>
+            )}
+            {!inStock && (
+              <span className="badge badge-error text-xs font-bold shadow-md">
+                Out of Stock
+              </span>
+            )}
+          </div>
         )}
-      </IconButton>
 
-      {/* Product Image */}
-      <CardMedia
-        component="img"
-        height="200"
-        image={imageUrl || '/placeholder-toy.jpg'}
-        alt={name}
-        sx={{
-          objectFit: 'cover',
-          backgroundColor: '#f5f5f5',
-        }}
-        loading="lazy"
-      />
+        {/* Favorite Button */}
+        <button
+          onClick={handleFavoriteClick}
+          className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-md hover:bg-white hover:scale-110 transition-all duration-200"
+          aria-label="Add to favorites"
+        >
+          <Heart
+            className={`w-5 h-5 transition-colors duration-200 ${
+              isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'
+            }`}
+          />
+        </button>
+
+        {/* Product Image */}
+        <img
+          src={imageUrl || '/placeholder-toy.jpg'}
+          alt={name}
+          className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-500"
+          loading="lazy"
+        />
+      </div>
 
       {/* Product Info */}
-      <CardContent sx={{ flexGrow: 1 }}>
-        <Tooltip title={name} placement="top">
-          <Typography
-            gutterBottom
-            variant="h6"
-            component="h3"
-            sx={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              minHeight: '3.6em',
-              fontSize: '1rem',
-            }}
-          >
-            {name}
-          </Typography>
-        </Tooltip>
+      <div className="p-4 space-y-3">
+        {/* Product Name */}
+        <h3 className="text-lg font-display font-semibold text-gray-800 line-clamp-2 min-h-[3.5rem] group-hover:text-primary-600 transition-colors duration-200">
+          {name}
+        </h3>
 
         {/* Rating */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Rating value={rating} precision={0.5} size="small" readOnly />
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            {[...Array(5)].map((_, index) => (
+              <Star
+                key={index}
+                className={`w-4 h-4 ${
+                  index < Math.floor(rating)
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
           {reviewCount > 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-              ({reviewCount})
-            </Typography>
+            <span className="text-sm text-gray-500">({reviewCount})</span>
           )}
-        </Box>
+        </div>
 
         {/* Price */}
-        <Typography variant="h6" color="primary" fontWeight="bold">
-          {formatPrice(price)}
-        </Typography>
-      </CardContent>
+        <div className="flex items-center justify-between">
+          <span className="text-2xl font-bold text-gradient">
+            {formatPrice(price)}
+          </span>
+        </div>
 
-      {/* Actions */}
-      <CardActions sx={{ p: 2, pt: 0 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          startIcon={<AddShoppingCartIcon />}
+        {/* Add to Cart Button */}
+        <button
           onClick={handleAddToCart}
           disabled={!inStock || isAdding}
-          sx={{
-            opacity: !inStock ? 0.6 : 1,
-          }}
+          className={`w-full flex items-center justify-center space-x-2 py-3 rounded-xl font-semibold transition-all duration-200 ${
+            !inStock
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : isAdding
+              ? 'bg-primary-400 text-white'
+              : 'btn-primary'
+          }`}
+          data-testid="add-to-cart-button"
         >
-          {isAdding ? 'Adding...' : inStock ? 'Add to Cart' : 'Out of Stock'}
-        </Button>
-      </CardActions>
-    </Card>
+          <ShoppingCart className="w-5 h-5" />
+          <span>{isAdding ? 'Adding...' : inStock ? 'Add to Cart' : 'Out of Stock'}</span>
+        </button>
+      </div>
+    </div>
   );
 };
 
