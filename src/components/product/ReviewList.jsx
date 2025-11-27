@@ -1,105 +1,122 @@
-import { Box, Typography, Rating, Paper, Grid, Chip, Divider, Pagination } from '@mui/material';
-import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
+import PropTypes from 'prop-types';
+import { Star, User, ThumbsUp } from 'lucide-react';
+import { format } from 'date-fns';
 
+/**
+ * ReviewList Component
+ * 
+ * Displays a list of product reviews with ratings, user info, and helpful votes.
+ */
 const ReviewList = ({ reviews, loading }) => {
   if (loading) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <Typography>Loading reviews...</Typography>
-      </Box>
+      <div className="space-y-4">
+        {[...Array(3)].map((_, index) => (
+          <div key={index} className="card p-6 animate-pulse">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-gray-200 rounded-full" />
+              <div className="flex-1 space-y-3">
+                <div className="h-4 bg-gray-200 rounded w-32" />
+                <div className="h-4 bg-gray-200 rounded w-full" />
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     );
   }
 
   if (!reviews || !reviews.content || reviews.content.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: 4 }}>
-        <Typography variant="body1" color="text.secondary">
-          No reviews yet. Be the first to review this product!
-        </Typography>
-      </Box>
+      <div className="card p-12 text-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Star className="w-8 h-8 text-primary-600" />
+        </div>
+        <h3 className="text-xl font-display font-bold text-gray-800 mb-2">No Reviews Yet</h3>
+        <p className="text-gray-600">Be the first to review this product!</p>
+      </div>
     );
   }
 
   return (
-    <Box>
-      {/* Review Summary */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Customer Reviews ({reviews.totalElements})
-        </Typography>
-        {reviews.totalElements > 0 && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Rating
-              value={reviews.content.reduce((acc, r) => acc + r.rating, 0) / reviews.content.length}
-              precision={0.1}
-              readOnly
-            />
-            <Typography variant="body2" color="text.secondary">
-              {(reviews.content.reduce((acc, r) => acc + r.rating, 0) / reviews.content.length).toFixed(1)} out of 5
-            </Typography>
-          </Box>
-        )}
-      </Box>
+    <div className="space-y-4" data-testid="review-list">
+      {reviews.content.map((review) => (
+        <div key={review.id} className="card p-6 space-y-4">
+          {/* Review Header */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-4">
+              {/* User Avatar */}
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-secondary-400 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              
+              {/* User Info & Rating */}
+              <div>
+                <h4 className="font-bold text-gray-800">
+                  {review.customerName || 'Anonymous'}
+                </h4>
+                <div className="flex items-center space-x-2 mt-1">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, index) => (
+                      <Star
+                        key={index}
+                        className={`w-4 h-4 ${
+                          index < review.rating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {format(new Date(review.createdDate || Date.now()), 'MMM dd, yyyy')}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <Divider sx={{ mb: 3 }} />
+          {/* Review Title */}
+          {review.title && (
+            <h5 className="font-semibold text-gray-800">{review.title}</h5>
+          )}
 
-      {/* Review List */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {reviews.content.map((review) => (
-          <Paper key={review.reviewId} variant="outlined" sx={{ p: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    {review.customerName}
-                  </Typography>
-                  {review.verifiedPurchase && (
-                    <Chip
-                      icon={<CheckCircleIcon />}
-                      label="Verified Purchase"
-                      size="small"
-                      color="success"
-                      variant="outlined"
-                    />
-                  )}
-                  <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto' }}>
-                    {new Date(review.submissionDate).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              </Grid>
+          {/* Review Comment */}
+          <p className="text-gray-700 leading-relaxed">{review.comment}</p>
 
-              <Grid item xs={12}>
-                <Rating value={review.rating} readOnly size="small" />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {review.reviewText}
-                </Typography>
-              </Grid>
-
-              {review.moderationStatus === 'FLAGGED' && (
-                <Grid item xs={12}>
-                  <Chip label="Under Review" size="small" color="warning" />
-                </Grid>
+          {/* Helpful Button */}
+          <div className="flex items-center space-x-4 pt-2 border-t border-gray-100">
+            <button className="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors duration-200">
+              <ThumbsUp className="w-4 h-4" />
+              <span className="text-sm font-medium">Helpful</span>
+              {review.helpfulCount > 0 && (
+                <span className="text-sm text-gray-500">({review.helpfulCount})</span>
               )}
-            </Grid>
-          </Paper>
-        ))}
-      </Box>
-
-      {/* Pagination */}
-      {reviews.totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Pagination
-            count={reviews.totalPages}
-            page={reviews.number + 1}
-            color="primary"
-          />
-        </Box>
-      )}
-    </Box>
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
   );
+};
+
+ReviewList.propTypes = {
+  reviews: PropTypes.shape({
+    content: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        rating: PropTypes.number.isRequired,
+        comment: PropTypes.string.isRequired,
+        title: PropTypes.string,
+        customerName: PropTypes.string,
+        createdDate: PropTypes.string,
+        helpfulCount: PropTypes.number,
+      })
+    ),
+    totalElements: PropTypes.number,
+  }),
+  loading: PropTypes.bool,
 };
 
 export default ReviewList;

@@ -1,174 +1,161 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  Box,
-  Typography,
-  Rating,
-  TextField,
-  Button,
-  Paper,
-  Alert,
-} from '@mui/material';
-import { StarBorder as StarBorderIcon } from '@mui/icons-material';
-import { submitReview, selectReviewSubmitting, selectSubmitError } from '../../store/slices/reviewSlice';
+import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
+import { Star, Send } from 'lucide-react';
+import { createReview } from '../../store/slices/reviewSlice';
 
+/**
+ * ReviewForm Component
+ * 
+ * Form for submitting product reviews with rating and comment.
+ */
 const ReviewForm = ({ productId, onSuccess }) => {
   const dispatch = useDispatch();
-  const submitting = useSelector(selectReviewSubmitting);
-  const submitError = useSelector(selectSubmitError);
-
   const [rating, setRating] = useState(0);
-  const [reviewText, setReviewText] = useState('');
-  const [errors, setErrors] = useState({});
   const [hoverRating, setHoverRating] = useState(0);
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (rating === 0) {
-      newErrors.rating = 'Please select a rating';
-    }
-
-    if (!reviewText.trim()) {
-      newErrors.reviewText = 'Please write a review';
-    } else if (reviewText.length < 10) {
-      newErrors.reviewText = 'Review must be at least 10 characters';
-    } else if (reviewText.length > 2000) {
-      newErrors.reviewText = 'Review must be less than 2000 characters';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [title, setTitle] = useState('');
+  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
-    if (!validateForm()) {
+    if (rating === 0) {
+      setError('Please select a rating');
+      return;
+    }
+
+    if (comment.trim().length < 10) {
+      setError('Review must be at least 10 characters long');
       return;
     }
 
     try {
+      setSubmitting(true);
       await dispatch(
-        submitReview({
+        createReview({
           productId,
-          reviewData: {
-            rating,
-            reviewText: reviewText.trim(),
-          },
+          rating,
+          title: title.trim(),
+          comment: comment.trim(),
         })
       ).unwrap();
 
       // Reset form
       setRating(0);
-      setReviewText('');
-      setErrors({});
-
-      // Notify parent
+      setTitle('');
+      setComment('');
+      
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      console.error('Failed to submit review:', err);
+      setError(err.message || 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const getRatingLabel = (value) => {
-    const labels = {
-      1: 'Poor',
-      2: 'Fair',
-      3: 'Good',
-      4: 'Very Good',
-      5: 'Excellent',
-    };
-    return labels[value] || '';
-  };
-
   return (
-    <Paper variant="outlined" sx={{ p: 3, mt: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Write a Review
-      </Typography>
-
-      {submitError && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {submitError}
-        </Alert>
-      )}
-
-      <Box component="form" onSubmit={handleSubmit}>
-        {/* Rating */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
+    <div className="card p-6 mt-6">
+      <h3 className="text-2xl font-display font-bold text-gray-800 mb-6">Write a Review</h3>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Rating Selection */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
             Your Rating *
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Rating
-              name="rating"
-              value={rating}
-              onChange={(event, newValue) => {
-                setRating(newValue);
-                if (errors.rating) {
-                  setErrors((prev) => ({ ...prev, rating: '' }));
-                }
-              }}
-              onChangeActive={(event, newHover) => {
-                setHoverRating(newHover);
-              }}
-              size="large"
-              emptyIcon={<StarBorderIcon fontSize="inherit" />}
-            />
-            <Typography variant="body2" color="text.secondary">
-              {getRatingLabel(hoverRating || rating)}
-            </Typography>
-          </Box>
-          {errors.rating && (
-            <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-              {errors.rating}
-            </Typography>
-          )}
-        </Box>
+          </label>
+          <div className="flex items-center space-x-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => setRating(star)}
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                className="transition-transform duration-200 hover:scale-110"
+                aria-label={`Rate ${star} stars`}
+              >
+                <Star
+                  className={`w-8 h-8 ${
+                    star <= (hoverRating || rating)
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-gray-300'
+                  }`}
+                />
+              </button>
+            ))}
+            {rating > 0 && (
+              <span className="ml-2 text-gray-600 font-medium">
+                {rating} {rating === 1 ? 'star' : 'stars'}
+              </span>
+            )}
+          </div>
+        </div>
 
-        {/* Review Text */}
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            fullWidth
-            multiline
-            rows={4}
-            label="Your Review *"
-            placeholder="Share your experience with this product..."
-            value={reviewText}
-            onChange={(e) => {
-              setReviewText(e.target.value);
-              if (errors.reviewText) {
-                setErrors((prev) => ({ ...prev, reviewText: '' }));
-              }
-            }}
-            error={Boolean(errors.reviewText)}
-            helperText={
-              errors.reviewText ||
-              `${reviewText.length}/2000 characters (minimum 10)`
-            }
-            inputProps={{ maxLength: 2000 }}
+        {/* Review Title */}
+        <div>
+          <label htmlFor="review-title" className="block text-sm font-semibold text-gray-700 mb-2">
+            Review Title (Optional)
+          </label>
+          <input
+            id="review-title"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Sum up your experience"
+            className="input-field"
+            maxLength={100}
           />
-        </Box>
+        </div>
+
+        {/* Review Comment */}
+        <div>
+          <label htmlFor="review-comment" className="block text-sm font-semibold text-gray-700 mb-2">
+            Your Review *
+          </label>
+          <textarea
+            id="review-comment"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Tell us what you think about this product..."
+            rows={5}
+            className="input-field resize-none"
+            maxLength={1000}
+            required
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            {comment.length}/1000 characters
+          </p>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-red-700">
+            {error}
+          </div>
+        )}
 
         {/* Submit Button */}
-        <Button
+        <button
           type="submit"
-          variant="contained"
           disabled={submitting}
-          fullWidth
+          className="btn-primary w-full flex items-center justify-center space-x-2 disabled:opacity-50"
         >
-          {submitting ? 'Submitting...' : 'Submit Review'}
-        </Button>
-
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-          * Your review will be checked for quality and may take some time to appear.
-        </Typography>
-      </Box>
-    </Paper>
+          <Send className="w-5 h-5" />
+          <span>{submitting ? 'Submitting...' : 'Submit Review'}</span>
+        </button>
+      </form>
+    </div>
   );
+};
+
+ReviewForm.propTypes = {
+  productId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onSuccess: PropTypes.func,
 };
 
 export default ReviewForm;
