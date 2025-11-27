@@ -35,7 +35,7 @@ const ReviewForm = ({ productId, onSuccess }) => {
     try {
       setSubmitting(true);
       await dispatch(
-        createReview({
+        submitReview({
           productId,
           rating,
           title: title.trim(),
