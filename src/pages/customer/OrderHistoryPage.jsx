@@ -21,7 +21,7 @@ const OrderHistoryPage = () => {
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
-    dispatch(fetchMyOrders({ page: 0, size: 20 }));
+    dispatch(fetchOrderHistory({ page: 0, size: 20 }));
   }, [dispatch]);
 
   const formatPrice = (value) => {
