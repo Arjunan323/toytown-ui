@@ -1,106 +1,47 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
-import {
-  Box,
-  Card,
-  CardMedia,
-  CardContent,
-  Typography,
-  IconButton,
-  TextField,
-  Tooltip,
-  Alert,
-} from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Remove as RemoveIcon,
-  Add as AddIcon,
-} from '@mui/icons-material';
+import { Minus, Plus, Trash2 } from 'lucide-react';
 import { updateCartItem, removeFromCart } from '../../store/slices/cartSlice';
-import { useNavigate } from 'react-router-dom';
 
 /**
  * CartItem Component
  * 
- * Displays a single item in the shopping cart with image, name, price, quantity controls,
- * and remove functionality.
+ * Displays a single cart item with image, details, quantity controls, and remove button.
+ * Used in the shopping cart page.
  * 
  * @component
  */
-const CartItem = ({
-  item,
-  onUpdate,
-  onRemove,
-  disabled = false,
-}) => {
+const CartItem = ({ item, disabled = false }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState(null);
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  if (!item) {
-    return null;
-  }
-
-  const {
-    id: itemId,
-    productId,
-    productName: name,
-    productPrice: price,
-    productImageUrl,
-    quantity,
-    subtotal,
-    availableStock: stockQuantity = 0,
-    inStock = true,
-  } = item;
-
-  // Use productImageUrl from item
-  const imageUrl = productImageUrl || '/placeholder-toy.jpg';
-  const maxQuantity = Math.min(stockQuantity, 10);
-  const isInStock = inStock && stockQuantity > 0;
-
-  const handleQuantityChange = async (newQuantity) => {
-    if (newQuantity < 1 || newQuantity > maxQuantity || isUpdating) {
-      return;
-    }
-
-    setError(null);
-    setIsUpdating(true);
+  const handleUpdateQuantity = async (newQuantity) => {
+    if (newQuantity < 1 || isUpdating) return;
 
     try {
-      await dispatch(updateCartItem({ itemId, quantity: newQuantity })).unwrap();
-      if (onUpdate) {
-        onUpdate(itemId, newQuantity);
-      }
-    } catch (err) {
-      setError(err || 'Failed to update quantity');
-      console.error('Failed to update cart item:', err);
+      setIsUpdating(true);
+      await dispatch(
+        updateCartItem({ itemId: item.id, quantity: newQuantity })
+      ).unwrap();
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleRemove = async () => {
-    if (isUpdating) return;
-
-    setError(null);
-    setIsUpdating(true);
+    if (isRemoving) return;
 
     try {
-      await dispatch(removeFromCart(itemId)).unwrap();
-      if (onRemove) {
-        onRemove(itemId);
-      }
-    } catch (err) {
-      setError(err || 'Failed to remove item');
-      console.error('Failed to remove cart item:', err);
-      setIsUpdating(false);
+      setIsRemoving(true);
+      await dispatch(removeFromCart(item.id)).unwrap();
+    } catch (error) {
+      console.error('Failed to remove item:', error);
+      setIsRemoving(false);
     }
-  };
-
-  const handleProductClick = () => {
-    navigate(`/products/${productId}`);
   };
 
   const formatPrice = (value) => {
@@ -111,138 +52,123 @@ const CartItem = ({
     }).format(value);
   };
 
+  const subtotal = item.quantity * item.productPrice;
+
   return (
-    <Card
-      variant="outlined"
-      sx={{
-        mb: 2,
-        opacity: disabled || isUpdating ? 0.6 : 1,
-        transition: 'opacity 0.2s',
-      }}
+    <div
+      className={`card p-6 mb-4 transition-all duration-300 ${
+        isRemoving ? 'opacity-50 scale-95' : ''
+      }`}
+      data-testid="cart-item"
     >
-      <Box sx={{ display: 'flex', p: 2 }}>
+      <div className="flex flex-col sm:flex-row gap-6">
         {/* Product Image */}
-        <CardMedia
-          component="img"
-          sx={{
-            width: 120,
-            height: 120,
-            objectFit: 'cover',
-            borderRadius: 1,
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-          image={imageUrl}
-          alt={name}
-          onClick={handleProductClick}
-        />
+        <div className="w-full sm:w-32 h-32 flex-shrink-0">
+          <img
+            src={item.productImageUrl || '/placeholder-toy.jpg'}
+            alt={item.productName}
+            className="w-full h-full object-cover rounded-xl"
+          />
+        </div>
 
         {/* Product Details */}
-        <CardContent sx={{ flexGrow: 1, p: 2, '&:last-child': { pb: 2 } }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography
-              variant="h6"
-              component="h3"
-              sx={{
-                cursor: 'pointer',
-                '&:hover': { color: 'primary.main' },
-                flexGrow: 1,
-                pr: 2,
-              }}
-              onClick={handleProductClick}
-            >
-              {name}
-            </Typography>
-
-            {/* Remove Button */}
-            <Tooltip title="Remove from cart">
-              <IconButton
-                onClick={handleRemove}
-                disabled={disabled || isUpdating}
-                color="error"
-                size="small"
-                sx={{ flexShrink: 0 }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
+        <div className="flex-1 space-y-3">
+          {/* Product Name */}
+          <h3 className="text-lg font-display font-bold text-gray-800 hover:text-primary-600 cursor-pointer">
+            {item.productName}
+          </h3>
 
           {/* Price */}
-          <Typography variant="body1" color="primary" fontWeight="bold" sx={{ mb: 2 }}>
-            {formatPrice(price)} each
-          </Typography>
+          <div className="flex items-baseline space-x-2">
+            <span className="text-xl font-bold text-gradient">
+              {formatPrice(item.productPrice)}
+            </span>
+            <span className="text-sm text-gray-500">each</span>
+          </div>
 
-          {/* Stock Status */}
-          {!isInStock && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              This item is currently out of stock
-            </Alert>
-          )}
-
-          {/* Quantity Control and Subtotal */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-            {/* Quantity Controls */}
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
-                Quantity:
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                }}
+          {/* Quantity Controls - Mobile/Tablet */}
+          <div className="flex items-center justify-between sm:hidden">
+            <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() => handleUpdateQuantity(item.quantity - 1)}
+                disabled={disabled || isUpdating || item.quantity <= 1}
+                className="p-2 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                aria-label="Decrease quantity"
               >
-                <IconButton
-                  onClick={() => handleQuantityChange(quantity - 1)}
-                  disabled={disabled || isUpdating || quantity <= 1}
-                  size="small"
-                >
-                  <RemoveIcon fontSize="small" />
-                </IconButton>
-                <TextField
-                  value={quantity}
-                  inputProps={{
-                    readOnly: true,
-                    style: { textAlign: 'center', width: '50px' },
-                  }}
-                  variant="standard"
-                  InputProps={{ disableUnderline: true }}
-                  size="small"
-                />
-                <IconButton
-                  onClick={() => handleQuantityChange(quantity + 1)}
-                  disabled={disabled || isUpdating || quantity >= maxQuantity || !inStock}
-                  size="small"
-                >
-                  <AddIcon fontSize="small" />
-                </IconButton>
-              </Box>
-              {stockQuantity > 0 && stockQuantity < 10 && (
-                <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
-                  Only {stockQuantity} left
-                </Typography>
-              )}
-            </Box>
+                <Minus className="w-4 h-4 text-primary-600" />
+              </button>
+              <span className="px-4 py-2 font-bold text-gray-800 min-w-[50px] text-center">
+                {item.quantity}
+              </span>
+              <button
+                onClick={() => handleUpdateQuantity(item.quantity + 1)}
+                disabled={disabled || isUpdating}
+                className="p-2 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                aria-label="Increase quantity"
+              >
+                <Plus className="w-4 h-4 text-primary-600" />
+              </button>
+            </div>
 
-            {/* Subtotal */}
-            <Typography variant="h6" color="primary" fontWeight="bold">
-              Subtotal: {formatPrice(subtotal || price * quantity)}
-            </Typography>
-          </Box>
+            {/* Subtotal - Mobile */}
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Subtotal</p>
+              <p className="text-xl font-bold text-gradient">{formatPrice(subtotal)}</p>
+            </div>
+          </div>
+        </div>
 
-          {/* Error Message */}
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
-        </CardContent>
-      </Box>
-    </Card>
+        {/* Quantity Controls - Desktop */}
+        <div className="hidden sm:flex items-center space-x-6">
+          <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => handleUpdateQuantity(item.quantity - 1)}
+              disabled={disabled || isUpdating || item.quantity <= 1}
+              className="p-3 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Decrease quantity"
+            >
+              <Minus className="w-5 h-5 text-primary-600" />
+            </button>
+            <span className="px-6 py-2 font-bold text-lg text-gray-800 min-w-[60px] text-center">
+              {item.quantity}
+            </span>
+            <button
+              onClick={() => handleUpdateQuantity(item.quantity + 1)}
+              disabled={disabled || isUpdating}
+              className="p-3 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              aria-label="Increase quantity"
+            >
+              <Plus className="w-5 h-5 text-primary-600" />
+            </button>
+          </div>
+
+          {/* Subtotal - Desktop */}
+          <div className="text-right min-w-[120px]">
+            <p className="text-sm text-gray-500 mb-1">Subtotal</p>
+            <p className="text-2xl font-bold text-gradient">{formatPrice(subtotal)}</p>
+          </div>
+        </div>
+
+        {/* Remove Button */}
+        <button
+          onClick={handleRemove}
+          disabled={disabled || isRemoving}
+          className="self-start p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 disabled:opacity-50"
+          aria-label="Remove item"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Stock Warning */}
+      {item.productStockQuantity <= 5 && item.productStockQuantity > 0 && (
+        <div className="mt-4 px-4 py-2 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800 font-medium">
+            ⚠️ Only {item.productStockQuantity} left in stock!
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -255,11 +181,8 @@ CartItem.propTypes = {
     productImageUrl: PropTypes.string,
     quantity: PropTypes.number.isRequired,
     subtotal: PropTypes.number,
-    availableStock: PropTypes.number,
-    inStock: PropTypes.bool,
+    productStockQuantity: PropTypes.number,
   }).isRequired,
-  onUpdate: PropTypes.func,
-  onRemove: PropTypes.func,
   disabled: PropTypes.bool,
 };
 

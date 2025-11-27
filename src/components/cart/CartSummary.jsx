@@ -1,55 +1,15 @@
 import PropTypes from 'prop-types';
-import { useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Divider,
-  Box,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Alert,
-} from '@mui/material';
-import {
-  ShoppingCart as ShoppingCartIcon,
-  LocalOffer as LocalOfferIcon,
-} from '@mui/icons-material';
+import { ShoppingBag, Truck, Tag } from 'lucide-react';
 
 /**
  * CartSummary Component
  * 
- * Displays cart totals, promotional code input, and checkout button.
- * Used on cart page and checkout page.
+ * Displays order summary with subtotal, shipping, tax, and total.
+ * Includes checkout button and promotional messages.
  * 
  * @component
  */
-const CartSummary = ({
-  items = [],
-  subtotal = 0,
-  tax = 0,
-  shipping = 0,
-  discount = 0,
-  total = 0,
-  itemCount = 0,
-  onCheckout,
-  onApplyPromo,
-  checkoutButtonText = 'Proceed to Checkout',
-  showPromoCode = true,
-  loading = false,
-  disabled = false,
-}) => {
-  const navigate = useNavigate();
-
-  const handleCheckout = () => {
-    if (onCheckout) {
-      onCheckout();
-    } else {
-      navigate('/checkout');
-    }
-  };
-
+const CartSummary = ({ items = [], subtotal = 0, onCheckout, loading = false, disabled = false }) => {
   const formatPrice = (value) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -58,174 +18,126 @@ const CartSummary = ({
     }).format(value);
   };
 
-  const calculatedSubtotal = subtotal || items.reduce((sum, item) => {
-    const itemSubtotal = item.subtotal || (item.product?.price * item.quantity);
-    return sum + itemSubtotal;
-  }, 0);
+  // Calculate shipping
+  const shippingThreshold = 500;
+  const shippingCost = subtotal >= shippingThreshold ? 0 : 50;
+  const freeShippingRemaining = shippingThreshold - subtotal;
 
-  const calculatedItemCount = itemCount || items.reduce((sum, item) => sum + item.quantity, 0);
-  
-  const freeShippingThreshold = 500;
-  const calculatedShipping = shipping !== undefined ? shipping : (calculatedSubtotal >= freeShippingThreshold ? 0 : 50);
-  
-  const calculatedTax = tax || (calculatedSubtotal * 0.18); // 18% GST
-  
-  const calculatedTotal = total || (calculatedSubtotal + calculatedShipping + calculatedTax - discount);
+  // Calculate tax (18% GST)
+  const tax = subtotal * 0.18;
 
-  const shippingMessage = calculatedSubtotal < freeShippingThreshold
-    ? `Add ${formatPrice(freeShippingThreshold - calculatedSubtotal)} more for free shipping!`
-    : 'You qualify for free shipping!';
+  // Calculate total
+  const total = subtotal + shippingCost + tax;
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <Card variant="outlined" sx={{ position: 'sticky', top: 16 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-          <ShoppingCartIcon sx={{ mr: 1 }} />
-          Order Summary
-        </Typography>
+    <div className="card p-6 sticky top-24" data-testid="cart-summary">
+      {/* Header */}
+      <div className="flex items-center space-x-2 mb-6 pb-6 border-b border-gray-200">
+        <ShoppingBag className="w-6 h-6 text-primary-600" />
+        <h2 className="text-2xl font-display font-bold text-gray-800">Order Summary</h2>
+      </div>
 
-        <Divider sx={{ my: 2 }} />
-
-        {/* Item Count */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Items ({calculatedItemCount})
-          </Typography>
-          <Typography variant="body2" fontWeight="medium">
-            {formatPrice(calculatedSubtotal)}
-          </Typography>
-        </Box>
+      {/* Summary Details */}
+      <div className="space-y-4 mb-6">
+        {/* Items Count */}
+        <div className="flex justify-between text-gray-700">
+          <span>Items ({totalItems})</span>
+          <span className="font-semibold">{formatPrice(subtotal)}</span>
+        </div>
 
         {/* Shipping */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Shipping
-          </Typography>
-          <Typography
-            variant="body2"
-            fontWeight="medium"
-            color={calculatedShipping === 0 ? 'success.main' : 'text.primary'}
-          >
-            {calculatedShipping === 0 ? 'FREE' : formatPrice(calculatedShipping)}
-          </Typography>
-        </Box>
+        <div className="flex justify-between text-gray-700">
+          <div className="flex items-center space-x-2">
+            <Truck className="w-4 h-4" />
+            <span>Shipping</span>
+          </div>
+          <span className={`font-semibold ${
+            shippingCost === 0 ? 'text-green-600' : ''
+          }`}>
+            {shippingCost === 0 ? 'FREE' : formatPrice(shippingCost)}
+          </span>
+        </div>
 
         {/* Free Shipping Progress */}
-        {calculatedSubtotal < freeShippingThreshold && (
-          <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
-            {shippingMessage}
-          </Alert>
+        {shippingCost > 0 && freeShippingRemaining > 0 && (
+          <div className="bg-primary-50 border-2 border-primary-200 rounded-xl p-4">
+            <p className="text-sm text-primary-800 font-medium mb-2">
+              Add {formatPrice(freeShippingRemaining)} more for FREE shipping! 🚚
+            </p>
+            <div className="w-full bg-primary-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-primary-500 to-secondary-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min((subtotal / shippingThreshold) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
         )}
 
         {/* Tax */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Tax (GST 18%)
-          </Typography>
-          <Typography variant="body2" fontWeight="medium">
-            {formatPrice(calculatedTax)}
-          </Typography>
-        </Box>
+        <div className="flex justify-between text-gray-700">
+          <div className="flex items-center space-x-2">
+            <Tag className="w-4 h-4" />
+            <span>Tax (18% GST)</span>
+          </div>
+          <span className="font-semibold">{formatPrice(tax)}</span>
+        </div>
+      </div>
 
-        {/* Discount */}
-        {discount > 0 && (
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2" color="success.main">
-              Discount
-            </Typography>
-            <Typography variant="body2" fontWeight="medium" color="success.main">
-              -{formatPrice(discount)}
-            </Typography>
-          </Box>
-        )}
+      {/* Total */}
+      <div className="pt-6 border-t-2 border-gray-200 mb-6">
+        <div className="flex justify-between items-center">
+          <span className="text-xl font-display font-bold text-gray-800">Total</span>
+          <span className="text-3xl font-bold text-gradient">{formatPrice(total)}</span>
+        </div>
+      </div>
 
-        <Divider sx={{ my: 2 }} />
+      {/* Checkout Button */}
+      <button
+        onClick={onCheckout}
+        disabled={disabled || loading || items.length === 0}
+        className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Processing...' : 'Proceed to Checkout'}
+      </button>
 
-        {/* Total */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h6">
-            Total
-          </Typography>
-          <Typography variant="h6" color="primary" fontWeight="bold">
-            {formatPrice(calculatedTotal)}
-          </Typography>
-        </Box>
+      {/* Security Message */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
+          <span>🔒</span>
+          <span>Secure Checkout</span>
+        </div>
+      </div>
 
-        {/* Promo Code */}
-        {showPromoCode && (
-          <Box sx={{ mb: 2 }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Enter promo code"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      edge="end"
-                      onClick={onApplyPromo}
-                      disabled={disabled}
-                      color="primary"
-                    >
-                      <LocalOfferIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Box>
-        )}
-
-        {/* Checkout Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          size="large"
-          onClick={handleCheckout}
-          disabled={disabled || loading || calculatedItemCount === 0}
-          sx={{ py: 1.5 }}
-        >
-          {loading ? 'Processing...' : checkoutButtonText}
-        </Button>
-
-        {/* Empty Cart Message */}
-        {calculatedItemCount === 0 && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Your cart is empty
-          </Alert>
-        )}
-
-        {/* Security Note */}
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', textAlign: 'center' }}>
-          🔒 Secure checkout with Razorpay
-        </Typography>
-      </CardContent>
-    </Card>
+      {/* Trust Badges */}
+      <div className="mt-4 space-y-2">
+        <div className="flex items-center space-x-2 text-xs text-gray-600">
+          <span>✓</span>
+          <span>100% Authentic Products</span>
+        </div>
+        <div className="flex items-center space-x-2 text-xs text-gray-600">
+          <span>✓</span>
+          <span>Easy Returns & Refunds</span>
+        </div>
+        <div className="flex items-center space-x-2 text-xs text-gray-600">
+          <span>✓</span>
+          <span>Safe & Secure Payments</span>
+        </div>
+      </div>
+    </div>
   );
 };
 
 CartSummary.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.number,
-      product: PropTypes.shape({
-        price: PropTypes.number,
-      }),
-      quantity: PropTypes.number,
-      subtotal: PropTypes.number,
+      id: PropTypes.number.isRequired,
+      quantity: PropTypes.number.isRequired,
     })
   ),
   subtotal: PropTypes.number,
-  tax: PropTypes.number,
-  shipping: PropTypes.number,
-  discount: PropTypes.number,
-  total: PropTypes.number,
-  itemCount: PropTypes.number,
-  onCheckout: PropTypes.func,
-  onApplyPromo: PropTypes.func,
-  checkoutButtonText: PropTypes.string,
-  showPromoCode: PropTypes.bool,
+  onCheckout: PropTypes.func.isRequired,
   loading: PropTypes.bool,
   disabled: PropTypes.bool,
 };
