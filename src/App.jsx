@@ -103,10 +103,10 @@ function App() {
           <Route 
             path="/*" 
             element={
-              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <div className="flex flex-col min-h-screen">
                 <Header />
                 
-                <main style={{ flex: 1, paddingTop: '20px', paddingBottom: '20px' }}>
+                <main className="flex-1 py-6">
                   <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<HomePage />} />
