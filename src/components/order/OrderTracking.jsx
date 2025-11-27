@@ -1,262 +1,139 @@
 import PropTypes from 'prop-types';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
-  Chip,
-  Alert,
-} from '@mui/material';
-import {
-  CheckCircle as CheckCircleIcon,
-  RadioButtonUnchecked as RadioButtonUncheckedIcon,
-  LocalShipping as LocalShippingIcon,
-  Inventory as InventoryIcon,
-  Done as DoneIcon,
-  Cancel as CancelIcon,
-} from '@mui/icons-material';
+import { Package, Truck, CheckCircle, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 
 /**
  * OrderTracking Component
  * 
- * Displays order status timeline with visual progress indicators.
- * Shows current order status and tracking information.
- * 
- * @component
+ * Visual order status tracker with timeline.
  */
-const OrderTracking = ({
-  order,
-  showHeader = true,
-}) => {
-  if (!order) {
-    return null;
-  }
-
-  const {
-    orderNumber,
-    orderStatus,
-    orderDate,
-    trackingNumber,
-    shippedDate,
-    deliveredDate,
-  } = order;
-
-  const formatDate = (date) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  // Define order status steps
-  const steps = [
-    {
-      label: 'Order Placed',
-      status: 'PENDING',
-      description: 'Your order has been received',
-      icon: <CheckCircleIcon />,
-      date: orderDate,
-    },
-    {
-      label: 'Processing',
-      status: 'PROCESSING',
-      description: 'We are preparing your order',
-      icon: <InventoryIcon />,
-      date: null,
-    },
-    {
-      label: 'Shipped',
-      status: 'SHIPPED',
-      description: 'Your order is on the way',
-      icon: <LocalShippingIcon />,
-      date: shippedDate,
-    },
-    {
-      label: 'Delivered',
-      status: 'DELIVERED',
-      description: 'Order has been delivered',
-      icon: <DoneIcon />,
-      date: deliveredDate,
-    },
+const OrderTracking = ({ status, orderDate, statusHistory = [] }) => {
+  const statuses = [
+    { key: 'PENDING', label: 'Order Placed', icon: Package },
+    { key: 'CONFIRMED', label: 'Confirmed', icon: CheckCircle },
+    { key: 'PROCESSING', label: 'Processing', icon: Clock },
+    { key: 'SHIPPED', label: 'Shipped', icon: Truck },
+    { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle },
   ];
 
-  // Determine active step based on order status
-  const getActiveStep = () => {
-    const statusIndex = steps.findIndex(step => step.status === orderStatus);
-    return statusIndex !== -1 ? statusIndex : 0;
+  const currentStatusIndex = statuses.findIndex(s => s.key === status);
+
+  const getStatusColor = (index) => {
+    if (status === 'CANCELLED' || status === 'FAILED') {
+      return 'text-red-600 bg-red-100';
+    }
+    if (index <= currentStatusIndex) {
+      return 'text-green-600 bg-green-100';
+    }
+    return 'text-gray-400 bg-gray-100';
   };
 
-  const activeStep = getActiveStep();
-  const isCancelled = orderStatus === 'CANCELLED';
-
-  const getStatusColor = (status) => {
-    const statusColors = {
-      PENDING: 'warning',
-      PROCESSING: 'info',
-      SHIPPED: 'primary',
-      DELIVERED: 'success',
-      CANCELLED: 'error',
-    };
-    return statusColors[status] || 'default';
+  const getLineColor = (index) => {
+    if (status === 'CANCELLED' || status === 'FAILED') {
+      return 'bg-red-200';
+    }
+    if (index < currentStatusIndex) {
+      return 'bg-green-500';
+    }
+    return 'bg-gray-200';
   };
 
-  const getStepIcon = (index, stepStatus) => {
-    if (isCancelled) {
-      return <CancelIcon color="error" />;
-    }
-    if (index < activeStep) {
-      return <CheckCircleIcon color="success" />;
-    }
-    if (index === activeStep) {
-      return steps[index].icon;
-    }
-    return <RadioButtonUncheckedIcon color="disabled" />;
-  };
+  // Handle cancelled or failed orders
+  if (status === 'CANCELLED' || status === 'FAILED') {
+    return (
+      <div className="card p-6 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Package className="w-8 h-8 text-red-600" />
+        </div>
+        <h3 className="text-xl font-display font-bold text-gray-800 mb-2">
+          Order {status === 'CANCELLED' ? 'Cancelled' : 'Failed'}
+        </h3>
+        <p className="text-gray-600">
+          {status === 'CANCELLED' 
+            ? 'This order has been cancelled'
+            : 'Payment failed for this order'}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        {/* Header */}
-        {showHeader && (
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  Order Tracking
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Order #{orderNumber}
-                </Typography>
-              </Box>
-              <Chip
-                label={orderStatus}
-                color={getStatusColor(orderStatus)}
-                icon={isCancelled ? <CancelIcon /> : undefined}
-              />
-            </Box>
+    <div className="card p-6" data-testid="order-tracking">
+      <h3 className="text-xl font-display font-bold text-gray-800 mb-6">Order Status</h3>
+      
+      {/* Timeline */}
+      <div className="relative">
+        {statuses.map((statusItem, index) => {
+          const Icon = statusItem.icon;
+          const isActive = index <= currentStatusIndex;
+          const isCurrent = index === currentStatusIndex;
 
-            {/* Tracking Info */}
-            {trackingNumber && orderStatus === 'SHIPPED' && (
-              <Alert severity="info" sx={{ mb: 2 }}>
-                <Typography variant="body2">
-                  <strong>Tracking Number:</strong> {trackingNumber}
-                </Typography>
-                {shippedDate && (
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    <strong>Shipped on:</strong> {formatDate(shippedDate)}
-                  </Typography>
+          return (
+            <div key={statusItem.key} className="relative pb-8 last:pb-0">
+              {/* Connector Line */}
+              {index < statuses.length - 1 && (
+                <div className={`absolute left-6 top-12 w-0.5 h-full ${getLineColor(index)}`} />
+              )}
+
+              {/* Status Item */}
+              <div className="flex items-start space-x-4">
+                {/* Icon Circle */}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                  isCurrent ? 'ring-4 ring-primary-100 scale-110' : ''
+                } ${getStatusColor(index)}`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+
+                {/* Status Info */}
+                <div className="flex-1 pt-2">
+                  <p className={`font-semibold ${
+                    isActive ? 'text-gray-800' : 'text-gray-400'
+                  }`}>
+                    {statusItem.label}
+                  </p>
+                  {isCurrent && orderDate && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {format(new Date(orderDate), 'MMM dd, yyyy • h:mm a')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Checkmark for completed steps */}
+                {isActive && !isCurrent && (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
                 )}
-              </Alert>
-            )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-            {/* Cancellation Notice */}
-            {isCancelled && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                This order has been cancelled
-              </Alert>
-            )}
-          </Box>
-        )}
-
-        {/* Status Timeline */}
-        {!isCancelled ? (
-          <Stepper activeStep={activeStep} orientation="vertical">
-            {steps.map((step, index) => (
-              <Step key={step.status} completed={index < activeStep}>
-                <StepLabel
-                  StepIconComponent={() => (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      {getStepIcon(index, step.status)}
-                    </Box>
-                  )}
-                >
-                  <Typography variant="body1" fontWeight={index === activeStep ? 'bold' : 'normal'}>
-                    {step.label}
-                  </Typography>
-                </StepLabel>
-                <StepContent>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {step.description}
-                  </Typography>
-                  {step.date && (
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDate(step.date)}
-                    </Typography>
-                  )}
-                  {index === activeStep && orderStatus === 'SHIPPED' && trackingNumber && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="body2" fontWeight="medium" gutterBottom>
-                        Tracking Details
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Tracking #: {trackingNumber}
-                      </Typography>
-                      {shippedDate && (
-                        <>
-                          <br />
-                          <Typography variant="caption" color="text.secondary">
-                            Shipped: {formatDate(shippedDate)}
-                          </Typography>
-                        </>
-                      )}
-                    </Box>
-                  )}
-                </StepContent>
-              </Step>
-            ))}
-          </Stepper>
-        ) : (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <CancelIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
-              Order Cancelled
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              This order was cancelled on {formatDate(orderDate)}
-            </Typography>
-          </Box>
-        )}
-
-        {/* Delivery Confirmation */}
-        {orderStatus === 'DELIVERED' && (
-          <Alert severity="success" sx={{ mt: 3 }}>
-            <Typography variant="body2" fontWeight="medium" gutterBottom>
-              ✓ Order Delivered Successfully
-            </Typography>
-            {deliveredDate && (
-              <Typography variant="body2" color="text.secondary">
-                Delivered on {formatDate(deliveredDate)}
-              </Typography>
-            )}
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Thank you for shopping with Aadhav's ToyTown! We hope you enjoy your purchase.
-            </Typography>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
+      {/* Current Status Badge */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Current Status:</span>
+          <span className={`px-4 py-2 rounded-full font-semibold text-sm ${
+            status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
+            status === 'SHIPPED' ? 'bg-blue-100 text-blue-700' :
+            'bg-yellow-100 text-yellow-700'
+          }`}>
+            {status}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 
 OrderTracking.propTypes = {
-  order: PropTypes.shape({
-    id: PropTypes.number,
-    orderNumber: PropTypes.string.isRequired,
-    orderStatus: PropTypes.oneOf(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).isRequired,
-    orderDate: PropTypes.string.isRequired,
-    trackingNumber: PropTypes.string,
-    shippedDate: PropTypes.string,
-    deliveredDate: PropTypes.string,
-  }),
-  showHeader: PropTypes.bool,
+  status: PropTypes.string.isRequired,
+  orderDate: PropTypes.string,
+  statusHistory: PropTypes.arrayOf(
+    PropTypes.shape({
+      status: PropTypes.string.isRequired,
+      timestamp: PropTypes.string.isRequired,
+    })
+  ),
 };
 
 export default OrderTracking;
