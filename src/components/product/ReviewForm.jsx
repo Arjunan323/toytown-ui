@@ -2,7 +2,7 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
 import { Star, Send } from 'lucide-react';
-import { createReview } from '../../store/slices/reviewSlice';
+import { submitReview } from '../../store/slices/reviewSlice';
 
 /**
  * ReviewForm Component
