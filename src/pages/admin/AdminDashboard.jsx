@@ -17,14 +17,16 @@ import {
  */
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { stats, loading } = useSelector((state) => state.admin || {});
-
-  useEffect(() => {
-    if (dispatch && fetchDashboardStats) {
-      dispatch(fetchDashboardStats());
-    }
-  }, [dispatch]);
+  
+  // Mock stats - in production, fetch from API
+  const [stats] = useState({
+    totalProducts: 156,
+    totalOrders: 342,
+    totalCustomers: 89,
+    totalRevenue: 245680,
+    recentOrders: [],
+    lowStockProducts: [],
+  });
 
   const statCards = [
     {
