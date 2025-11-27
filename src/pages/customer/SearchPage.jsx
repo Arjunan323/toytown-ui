@@ -25,9 +25,6 @@ const SearchPage = () => {
     if (query) {
       dispatch(searchProducts({ query, page: 0, size: 12, sort: sortBy }));
     }
-    return () => {
-      dispatch(clearSearch());
-    };
   }, [dispatch, query, sortBy]);
 
   const handleSearch = (newQuery) => {
