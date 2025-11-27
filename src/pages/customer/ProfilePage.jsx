@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { User, Mail, Phone, MapPin, Edit, Save, X } from 'lucide-react';
 import AddressList from '../../components/profile/AddressList';
-import { updateProfile } from '../../store/slices/authSlice';
+import { updateUser } from '../../store/slices/authSlice';
 import { fetchShippingAddresses } from '../../store/slices/orderSlice';
 
 /**
