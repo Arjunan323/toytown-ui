@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Search, Filter, X, ArrowUpDown } from 'lucide-react';
 import ProductGrid from '../../components/product/ProductGrid';
 import SearchBar from '../../components/search/SearchBar';
-import { searchProducts, clearSearch } from '../../store/slices/productSlice';
+import { searchProducts } from '../../store/slices/productSlice';
 
 /**
  * SearchPage Component
