@@ -1,119 +1,50 @@
 import { useState } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch } from 'react-redux';
-import {
-  Box,
-  Typography,
-  Button,
-  Rating,
-  Chip,
-  Divider,
-  TextField,
-  Grid,
-  Card,
-  CardContent,
-  Alert,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import {
-  AddShoppingCart as AddShoppingCartIcon,
-  Remove as RemoveIcon,
-  Add as AddIcon,
-  Favorite as FavoriteIcon,
-  FavoriteBorder as FavoriteBorderIcon,
-  Share as ShareIcon,
-  LocalShipping as LocalShippingIcon,
-  Verified as VerifiedIcon,
-} from '@mui/icons-material';
+import { useDispatch, useSelector } from 'react-redux';
+import { ShoppingCart, Heart, Star, Minus, Plus, Package, Award, Shield } from 'lucide-react';
 import { addToCart } from '../../store/slices/cartSlice';
 
 /**
  * ProductDetail Component
  * 
- * Displays full product details including image gallery, description, specifications,
- * reviews, and add-to-cart functionality with quantity selection.
+ * Displays detailed product information with image gallery, specifications,
+ * quantity selector, and add-to-cart functionality.
  * 
  * @component
  */
-const ProductDetail = ({
-  product,
-  onAddReview,
-}) => {
+const ProductDetail = ({ product }) => {
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(product?.imageUrl || '');
   const [isAdding, setIsAdding] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  if (!product) {
-    return null;
-  }
-
-  const {
-    id,
-    name,
-    description,
-    price,
-    stockQuantity = 0,
-    minAge,
-    maxAge,
-    images: productImages = [],
-    manufacturer,
-    category,
-    averageRating = 0,
-    reviewCount = 0,
-    sku,
-    isFeatured = false,
-  } = product;
-
-  const inStock = stockQuantity > 0;
-  // Extract image URLs from the images array
-  const images = productImages.length > 0 
-    ? productImages.map(img => img.imageUrl).filter(Boolean)
-    : ['/placeholder-toy.jpg'];
-
-  const handleQuantityChange = (delta) => {
-    const newQuantity = quantity + delta;
-    if (newQuantity >= 1 && newQuantity <= Math.min(stockQuantity, 10)) {
-      setQuantity(newQuantity);
-    }
-  };
+  if (!product) return null;
 
   const handleAddToCart = async () => {
-    if (!inStock || isAdding) return;
+    if (!product.stockQuantity || isAdding) return;
 
     try {
       setIsAdding(true);
-      await dispatch(addToCart({ productId: id, quantity })).unwrap();
-      // Keep button in adding state briefly for visual feedback
+      await dispatch(addToCart({ productId: product.id, quantity })).unwrap();
       await new Promise(resolve => setTimeout(resolve, 500));
-      // Reset quantity after successful add
-      setQuantity(1);
     } catch (error) {
       console.error('Failed to add to cart:', error);
-      // TODO: Show error notification
     } finally {
       setIsAdding(false);
     }
   };
 
-  const handleFavoriteClick = () => {
-    setIsFavorite(!isFavorite);
-    // TODO: Implement favorite/wishlist functionality
+  const incrementQuantity = () => {
+    if (quantity < product.stockQuantity) {
+      setQuantity(quantity + 1);
+    }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: name,
-        text: description,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      // TODO: Show "Link copied" notification
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
     }
   };
 
@@ -125,250 +56,226 @@ const ProductDetail = ({
     }).format(value);
   };
 
+  const inStock = product.stockQuantity > 0;
+  const lowStock = product.stockQuantity > 0 && product.stockQuantity <= 5;
+
   return (
-    <Box>
-      <Grid container spacing={4}>
-        {/* Left Side - Image Gallery */}
-        <Grid item xs={12} md={6}>
-          {/* Main Image */}
-          <Box
-            sx={{
-              position: 'relative',
-              width: '100%',
-              paddingTop: '100%', // 1:1 aspect ratio
-              backgroundColor: '#f5f5f5',
-              borderRadius: 2,
-              overflow: 'hidden',
-              mb: 2,
-            }}
-          >
-            <img
-              src={images[selectedImage]}
-              alt={`${name} - Image ${selectedImage + 1}`}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-              }}
-            />
-            
-            {/* Badges */}
-            {(isFeatured || !inStock) && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 16,
-                  left: 16,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 1,
-                }}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      {/* Image Gallery */}
+      <div className="space-y-4">
+        {/* Main Image */}
+        <div className="relative bg-gradient-to-br from-primary-50 to-secondary-50 rounded-3xl overflow-hidden shadow-card aspect-square">
+          <img
+            src={selectedImage || product.imageUrl || '/placeholder-toy.jpg'}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+          {!inStock && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="badge badge-error text-lg px-6 py-3">Out of Stock</span>
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnail Images - If multiple images available */}
+        {product.images && product.images.length > 1 && (
+          <div className="grid grid-cols-4 gap-4">
+            {product.images.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedImage(image)}
+                className={`aspect-square rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                  selectedImage === image
+                    ? 'border-primary-500 shadow-toy'
+                    : 'border-gray-200 hover:border-primary-300'
+                }`}
               >
-                {isFeatured && <Chip label="Featured" color="primary" />}
-                {!inStock && <Chip label="Out of Stock" color="error" />}
-              </Box>
-            )}
-          </Box>
+                <img
+                  src={image}
+                  alt={`${product.name} view ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
-          {/* Thumbnail Gallery */}
-          {images.length > 1 && (
-            <Grid container spacing={1}>
-              {images.map((image, index) => (
-                <Grid item xs={3} key={index}>
-                  <Box
-                    onClick={() => setSelectedImage(index)}
-                    sx={{
-                      position: 'relative',
-                      width: '100%',
-                      paddingTop: '100%',
-                      backgroundColor: '#f5f5f5',
-                      borderRadius: 1,
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: selectedImage === index ? 2 : 1,
-                      borderColor: selectedImage === index ? 'primary.main' : 'divider',
-                      transition: 'border-color 0.2s',
-                      '&:hover': {
-                        borderColor: 'primary.light',
-                      },
-                    }}
-                  >
-                    <img
-                      src={image}
-                      alt={`${name} - Thumbnail ${index + 1}`}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                      }}
-                    />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
+      {/* Product Info */}
+      <div className="space-y-6">
+        {/* Category & Brand */}
+        <div className="flex items-center space-x-3">
+          {product.category && (
+            <span className="badge badge-primary">{product.category.name || product.category}</span>
           )}
-        </Grid>
+          {product.manufacturer && (
+            <span className="badge bg-secondary-100 text-secondary-700">
+              {product.manufacturer.name || product.manufacturer}
+            </span>
+          )}
+        </div>
 
-        {/* Right Side - Product Information */}
-        <Grid item xs={12} md={6}>
-          {/* Title and Actions */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Typography variant="h4" component="h1" sx={{ flexGrow: 1, pr: 2 }}>
-              {name}
-            </Typography>
-            <Box>
-              <Tooltip title="Add to Favorites">
-                <IconButton onClick={handleFavoriteClick} color={isFavorite ? 'error' : 'default'}>
-                  {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Share">
-                <IconButton onClick={handleShare}>
-                  <ShareIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
+        {/* Product Name */}
+        <h1 className="text-3xl md:text-4xl font-display font-bold text-gray-800">
+          {product.name}
+        </h1>
 
-          {/* Rating */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Rating value={averageRating} precision={0.5} readOnly />
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-              {averageRating.toFixed(1)} ({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})
-            </Typography>
-          </Box>
+        {/* Rating */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1">
+            {[...Array(5)].map((_, index) => (
+              <Star
+                key={index}
+                className={`w-6 h-6 ${
+                  index < Math.floor(product.averageRating || 0)
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-gray-600">
+            {product.averageRating ? product.averageRating.toFixed(1) : '0.0'}
+          </span>
+          {product.reviewCount > 0 && (
+            <span className="text-gray-500">({product.reviewCount} reviews)</span>
+          )}
+        </div>
 
-          {/* Price */}
-          <Typography variant="h4" color="primary" fontWeight="bold" sx={{ mb: 3 }}>
-            {formatPrice(price)}
-          </Typography>
+        {/* Price */}
+        <div className="space-y-2">
+          <div className="text-4xl font-bold text-gradient">
+            {formatPrice(product.price)}
+          </div>
+          {product.compareAtPrice && product.compareAtPrice > product.price && (
+            <div className="flex items-center space-x-3">
+              <span className="text-xl text-gray-400 line-through">
+                {formatPrice(product.compareAtPrice)}
+              </span>
+              <span className="badge badge-success text-sm">
+                Save {Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)}%
+              </span>
+            </div>
+          )}
+        </div>
 
-          <Divider sx={{ mb: 3 }} />
+        {/* Stock Status */}
+        <div className="flex items-center space-x-2">
+          {inStock ? (
+            <>
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-green-700 font-semibold">
+                {lowStock ? `Only ${product.stockQuantity} left in stock!` : 'In Stock'}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="w-3 h-3 bg-red-500 rounded-full" />
+              <span className="text-red-700 font-semibold">Out of Stock</span>
+            </>
+          )}
+        </div>
 
-          {/* Product Details */}
-          <Box sx={{ mb: 3 }}>
-            <Grid container spacing={2}>
-              {manufacturer && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Manufacturer:</strong> {manufacturer.name || manufacturer}
-                  </Typography>
-                </Grid>
-              )}
-              {category && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Category:</strong> {category.name || category}
-                  </Typography>
-                </Grid>
-              )}
-              {(minAge || maxAge) && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Recommended Age:</strong>{' '}
-                    {minAge && maxAge ? `${minAge}-${maxAge} years` : minAge ? `${minAge}+ years` : `Up to ${maxAge} years`}
-                  </Typography>
-                </Grid>
-              )}
-              {sku && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>SKU:</strong> {sku}
-                  </Typography>
-                </Grid>
-              )}
-              <Grid item xs={12}>
-                <Typography variant="body2" color={inStock ? 'success.main' : 'error.main'}>
-                  <strong>Availability:</strong> {inStock ? `In Stock (${stockQuantity} available)` : 'Out of Stock'}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
+        {/* Divider */}
+        <hr className="border-gray-200" />
 
-          {/* Quantity Selector and Add to Cart */}
-          {inStock && (
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Quantity
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', border: 1, borderColor: 'divider', borderRadius: 1 }}>
-                  <IconButton
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 1}
-                    size="small"
-                  >
-                    <RemoveIcon />
-                  </IconButton>
-                  <TextField
-                    value={quantity}
-                    inputProps={{
-                      readOnly: true,
-                      style: { textAlign: 'center', width: '60px' },
-                    }}
-                    variant="standard"
-                    InputProps={{ disableUnderline: true }}
-                  />
-                  <IconButton
-                    onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= Math.min(stockQuantity, 10)}
-                    size="small"
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </Box>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  fullWidth
-                  startIcon={<AddShoppingCartIcon />}
-                  onClick={handleAddToCart}
-                  disabled={isAdding}
-                  sx={{ flexGrow: 1 }}
+        {/* Short Description */}
+        {product.shortDescription && (
+          <p className="text-lg text-gray-700 leading-relaxed">
+            {product.shortDescription}
+          </p>
+        )}
+
+        {/* Age Range */}
+        {product.ageRange && (
+          <div className="flex items-center space-x-2 text-gray-700">
+            <Package className="w-5 h-5 text-primary-600" />
+            <span className="font-semibold">Age:</span>
+            <span>{product.ageRange} years</span>
+          </div>
+        )}
+
+        {/* Quantity Selector */}
+        {inStock && (
+          <div className="space-y-3">
+            <label className="block text-sm font-semibold text-gray-700">Quantity</label>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden">
+                <button
+                  onClick={decrementQuantity}
+                  disabled={quantity <= 1}
+                  className="p-3 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  aria-label="Decrease quantity"
                 >
-                  {isAdding ? 'Adding...' : 'Add to Cart'}
-                </Button>
-              </Box>
-            </Box>
-          )}
+                  <Minus className="w-5 h-5 text-primary-600" />
+                </button>
+                <span className="px-6 py-2 font-bold text-xl text-gray-800 min-w-[60px] text-center">
+                  {quantity}
+                </span>
+                <button
+                  onClick={incrementQuantity}
+                  disabled={quantity >= product.stockQuantity}
+                  className="p-3 hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="w-5 h-5 text-primary-600" />
+                </button>
+              </div>
+              {lowStock && (
+                <span className="text-sm text-orange-600 font-medium">Max: {product.stockQuantity}</span>
+              )}
+            </div>
+          </div>
+        )}
 
-          {/* Shipping Info */}
-          <Card variant="outlined" sx={{ mb: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <LocalShippingIcon color="primary" sx={{ mr: 1 }} />
-                <Typography variant="body2" fontWeight="bold">
-                  Free Shipping on orders over ₹500
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <VerifiedIcon color="success" sx={{ mr: 1 }} />
-                <Typography variant="body2" fontWeight="bold">
-                  100% Authentic Products
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock || isAdding}
+            className="flex-1 btn-primary flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="add-to-cart-button"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            <span>{isAdding ? 'Adding...' : 'Add to Cart'}</span>
+          </button>
+          <button
+            onClick={() => setIsFavorite(!isFavorite)}
+            className="btn-outline flex items-center justify-center space-x-2 sm:w-auto"
+            aria-label="Add to wishlist"
+          >
+            <Heart
+              className={`w-5 h-5 transition-colors duration-200 ${
+                isFavorite ? 'fill-red-500 text-red-500' : ''
+              }`}
+            />
+            <span className="sm:hidden">Wishlist</span>
+          </button>
+        </div>
 
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Description */}
-          <Typography variant="h6" gutterBottom>
-            Description
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, whiteSpace: 'pre-line' }}>
-            {description}
-          </Typography>
-        </Grid>
-      </Grid>
-    </Box>
+        {/* Trust Badges */}
+        <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-200">
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mx-auto">
+              <Shield className="w-6 h-6 text-primary-600" />
+            </div>
+            <p className="text-xs font-semibold text-gray-700">Safe & Secure</p>
+          </div>
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <Award className="w-6 h-6 text-green-600" />
+            </div>
+            <p className="text-xs font-semibold text-gray-700">Quality Assured</p>
+          </div>
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 bg-secondary-100 rounded-full flex items-center justify-center mx-auto">
+              <Package className="w-6 h-6 text-secondary-600" />
+            </div>
+            <p className="text-xs font-semibold text-gray-700">Fast Shipping</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -376,30 +283,19 @@ ProductDetail.propTypes = {
   product: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
     price: PropTypes.number.isRequired,
-    stockQuantity: PropTypes.number,
-    minAge: PropTypes.number,
-    maxAge: PropTypes.number,
-    imageUrls: PropTypes.arrayOf(PropTypes.string),
-    manufacturer: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        name: PropTypes.string,
-      }),
-    ]),
-    category: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        name: PropTypes.string,
-      }),
-    ]),
+    imageUrl: PropTypes.string,
+    images: PropTypes.arrayOf(PropTypes.string),
+    category: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    manufacturer: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     averageRating: PropTypes.number,
     reviewCount: PropTypes.number,
-    sku: PropTypes.string,
-    isFeatured: PropTypes.bool,
-  }),
-  onAddReview: PropTypes.func,
+    stockQuantity: PropTypes.number,
+    shortDescription: PropTypes.string,
+    description: PropTypes.string,
+    ageRange: PropTypes.string,
+    compareAtPrice: PropTypes.number,
+  }).isRequired,
 };
 
 export default ProductDetail;
